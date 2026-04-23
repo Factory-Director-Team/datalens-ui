@@ -1,10 +1,8 @@
 {
     "!(src/ui/**/*)*.{js,jsx,ts,tsx}": [
-      "eslint --fix --quiet",
       "prettier --write"
     ],
     "src/ui/**/*.{js,jsx,ts,tsx}": [
-      "eslint -c src/ui/.ci-eslintrc --fix --quiet",
       "prettier --write"
     ],
     "*.{css,scss}": [

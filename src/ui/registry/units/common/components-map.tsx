@@ -1,3 +1,4 @@
+import {DialogShare} from 'ui/components/DialogShare';
 import {RangeInputPicker} from 'ui/components/common/RangeInputPicker';
 import type {ShareButtonProps} from 'ui/units/dash/components/ShareButton/ShareButton';
 
@@ -20,7 +21,6 @@ import type {DialogAddParticipantsProps} from './types/components/DialogAddParti
 import type {DialogEntryDescriptionProps} from './types/components/DialogEntryDescription';
 import type {DialogImageWidgetLinkHintProps} from './types/components/DialogImageWidgetLinkHint';
 import type {DialogRelatedEntitiesRadioHintProps} from './types/components/DialogRelatedEntitiesRadioHint';
-import type {DialogShareProps} from './types/components/DialogShare';
 import type {DownloadScreenshotProps} from './types/components/DownloadScreenshot';
 import type {EntryBreadcrumbsProps} from './types/components/EntryBreadcrumbs';
 import type {IamAccessDialogProps} from './types/components/IamAccessDialog';
@@ -60,7 +60,7 @@ export const commonComponentsMap = {
     Footer: makeDefaultEmpty(),
     AclSubject: makeDefaultEmpty<AclSubjectProps>(),
     AclSubjectSuggest: makeDefaultEmpty<AclSubjectSuggestProps>(),
-    DialogShare: makeDefaultEmpty<DialogShareProps>(),
+    DialogShare,
     ShareButton: makeDefaultEmpty<ShareButtonProps>(),
     DialogImageWidgetLinkHint: makeDefaultEmpty<DialogImageWidgetLinkHintProps>(),
     DialogRelatedEntitiesRadioHint: makeDefaultEmpty<DialogRelatedEntitiesRadioHintProps>(),

@@ -1,0 +1,64 @@
+.dl-dialog-share {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 520px;
+
+    &__tabs {
+        margin-bottom: 12px;
+    }
+
+    &__panel {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__section {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__section-title {
+        font-weight: 500;
+        color: var(--g-color-text-secondary);
+    }
+
+    &__options {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    &__size-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    &__size-input {
+        width: 100px;
+    }
+
+    &__value-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    &__value-textarea {
+        flex: 1;
+    }
+
+    &__hint {
+        color: var(--g-color-text-secondary);
+        font-size: 12px;
+    }
+
+    &__federation-hint {
+        color: var(--g-color-text-warning-heavy);
+        font-size: 12px;
+    }
+}

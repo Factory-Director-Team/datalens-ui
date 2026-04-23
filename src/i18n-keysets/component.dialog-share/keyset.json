@@ -1,0 +1,100 @@
+{
+  "context": "",
+  "allowedStatuses": [
+    "APPROVED",
+    "EXPIRED",
+    "GENERATED",
+    "REQUIRES_TRANSLATION",
+    "TRANSLATED"
+  ],
+  "status": {
+    "title-share": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "title-embed": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "tab-link": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "tab-iframe": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "section-options": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "section-size": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "option-no-controls": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "option-hide-comments": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "option-hide-menu": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "size-auto": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "size-custom": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "label-width": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "label-height": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "label-url": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "label-iframe": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "button-copy": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "button-close": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "button-copy-and-close": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "toast-copied": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "toast-copy-failed": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "federation-hint": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    },
+    "link-description": {
+      "en": "APPROVED",
+      "ru": "APPROVED"
+    }
+  }
+}
