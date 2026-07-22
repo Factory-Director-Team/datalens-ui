@@ -1,6 +1,6 @@
 import type {Request, Response} from '@gravity-ui/expresskit';
 
-import {DL_EMBED_TOKEN_SEARCH_PARAM} from '../../shared';
+import {DL_EMBED_TOKEN_SEARCH_PARAM, EntryScope} from '../../shared';
 import {Utils} from '../components';
 import US from '../components/sdk/us';
 import {registry} from '../registry';
@@ -20,6 +20,10 @@ export const embedController = async (req: Request, res: Response) => {
         try {
             const {entry} = await US.readEmbeddedEntry(embedToken, Utils.pickHeaders(req), req.ctx);
             res.locals.embedEntryId = entry.entryId;
+            // Resolve the object's scope up front so the client mounts the right chromeless view — a
+            // single chart or a whole dashboard (its dependent charts served by the same token) — with
+            // no flash (ticket 05). Mirrors publicController setting DL.publicScope.
+            res.locals.embedScope = entry.scope === EntryScope.Dash ? 'dash' : 'chart';
         } catch (error) {
             req.ctx.logError('EMBED_ENTRY_RESOLVE_FAILED', error);
         }

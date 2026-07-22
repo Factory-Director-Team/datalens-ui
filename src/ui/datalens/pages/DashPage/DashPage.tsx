@@ -20,6 +20,9 @@ const routePaths = [
     '/workbooks/:workbookId/dash',
     // Anonymous public dashboard link (ticket 03); the DashApp renders chromelessly in public mode.
     '/public/:id',
+    // Anonymous embedded dashboard (ticket 05); the entry id comes from the token (DL.EMBED_ENTRY_ID),
+    // not the URL, and the DashApp renders chromelessly in embed mode.
+    '/embed',
     '/:id',
 ];
 

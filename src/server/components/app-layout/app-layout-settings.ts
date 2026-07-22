@@ -71,10 +71,13 @@ export const getAppLayoutSettings = (
             // Anonymous Embed page (variant B). DL.embed makes the client render chromelessly and
             // attach the Embed token to chart runs; the token itself rides in DL.embedToken so the
             // client's getSecureEmbeddingToken can read it. Authorization is enforced in US (ADR 0003).
+            // embed.mode (resolved by embedController from the token) tells the client whether to mount a
+            // single chart or a whole dashboard (ticket 05); it defaults to 'chart' when the token did
+            // not resolve, so the page stays fail-closed.
             return {
                 renderConfig: {title: config.serviceName},
                 DL: {
-                    embed: {mode: 'chart'},
+                    embed: {mode: (res.locals.embedScope as 'chart' | 'dash') || 'chart'},
                     embedToken: res.locals.embedToken as string | undefined,
                     embedEntryId: res.locals.embedEntryId as string | undefined,
                 },

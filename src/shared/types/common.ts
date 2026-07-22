@@ -225,9 +225,12 @@ export type DLGlobalData = {
     };
     // sorted roles from the role with the most rights to the role with the least
     orderedAuthRoles?: `${UserRole}`[];
+    // 'chart' embeds a single chart; 'dash' embeds a whole dashboard (its dependent charts are served
+    // by the same token, ticket 05). Resolved server-side from the token so the page mounts the right
+    // chromeless view with no flash.
     embed?:
         | {
-              mode: 'chart';
+              mode: 'chart' | 'dash';
           }
         | boolean;
     // The signed Embed token carried from the iframe URL into the anonymous embed page; the client

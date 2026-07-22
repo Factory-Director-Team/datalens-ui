@@ -29,6 +29,20 @@ export const isNoScrollMode = () => {
 
 export const isEmbeddedEntry = () => Boolean(DL.EMBED);
 
+// True on an anonymous Embed page whose object is a whole dashboard (variant B, ticket 05). The scope
+// was resolved server-side into DL.embed.mode; the client uses it to mount the dashboard view instead of
+// a single chart, and to render it chromeless/read-only like a public dashboard.
+export const isEmbeddedDashboard = () => {
+    const embed = DL.EMBED;
+    return typeof embed === 'object' && embed !== null && embed.mode === 'dash';
+};
+
 // True on the anonymous public-link page. Used to render chromelessly (no aside/mobile header) and to
 // route chart runs to the anonymous /api/public/run endpoint.
 export const isPublicMode = () => DL.PUBLIC;
+
+// True when the current view is anonymous (no logged-in session) — a public link or an Embed. Both
+// render chromeless and read-only, so dashboard chrome/edit/auth-poll are suppressed the same way for
+// each. The older ?mode=embedded view (isEmbeddedMode) is chromeless too but keeps a real session, so it
+// is deliberately NOT included here.
+export const isAnonymousMode = () => isPublicMode() || isEmbeddedEntry();

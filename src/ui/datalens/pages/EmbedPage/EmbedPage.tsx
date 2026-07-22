@@ -5,6 +5,9 @@ import type {RouteComponentProps} from 'react-router-dom';
 import {DL_EMBED_TOKEN_SEARCH_PARAM, PreviewQa} from 'shared';
 import {DL, Utils} from 'ui';
 import {ChartWrapper} from 'ui/components/Widgets/Chart/ChartWidgetWithProvider';
+import {isEmbeddedDashboard} from 'ui/utils/embedded';
+
+import DashPage from '../DashPage/DashPage';
 
 import './EmbedPage.scss';
 
@@ -35,6 +38,13 @@ const EmbedPage: React.FC<EmbedPageProps> = (props) => {
     // failure via the run, keeping the page fail-closed rather than showing the DataLens layout.
     if (!entryId) {
         return null;
+    }
+
+    // A dashboard embed reuses the normal DashPage, which loads its config from the token (readDashEmbed)
+    // and renders chromeless in embed mode; its dependent charts run by id under the same token (ticket
+    // 05). A single-chart embed renders one ChartWrapper addressed by `source` (resolved by token alone).
+    if (isEmbeddedDashboard()) {
+        return <DashPage />;
     }
 
     return (

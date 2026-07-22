@@ -25,7 +25,7 @@ import {closeDialog, openWarningDialog} from 'ui/store/actions/dialog';
 import {showToast} from 'ui/store/actions/toaster';
 import {addWorkbookInfo, resetWorkbookPermissions} from 'ui/units/workbooks/store/actions';
 import Utils, {formDocsEndpointDL} from 'ui/utils';
-import {isPublicMode} from 'ui/utils/embedded';
+import {isAnonymousMode} from 'ui/utils/embedded';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 
 import {
@@ -112,8 +112,9 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
             this.props.setPageTab(tabId);
         }
 
-        // Anonymous public viewers have no session to keep alive — skip the passport auth-update poll.
-        if (isEnabledFeature(Feature.AuthUpdateWithTimeout) && !isPublicMode()) {
+        // Anonymous public or embedded viewers have no session to keep alive — skip the passport
+        // auth-update poll.
+        if (isEnabledFeature(Feature.AuthUpdateWithTimeout) && !isAnonymousMode()) {
             this.setAuthUpdateTimeout();
         }
 
@@ -282,8 +283,8 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
                         history={history}
                     />
                     <AccessRightsUrlOpen history={history} />
-                    {/* Anonymous public viewers get no edit toolbar — the dashboard renders chromeless. */}
-                    {!isPublicMode() && (
+                    {/* Anonymous public or embedded viewers get no edit toolbar — chromeless render. */}
+                    {!isAnonymousMode() && (
                         <Header
                             entryDialoguesRef={this.entryDialoguesRef}
                             settingsDrawerApiRef={this.settingsDrawerApiRef}
@@ -300,8 +301,8 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
                         onPasteItem={this.onPasteItem}
                         globalParams={getUrlGlobalParams(location.search, dashGlobalDefaultParams)}
                         dashkitSettings={this.getDashkitSettings(settings)}
-                        onlyView={DL.IS_MOBILE || isPublicMode()}
-                        isPublicMode={isPublicMode()}
+                        onlyView={DL.IS_MOBILE || isAnonymousMode()}
+                        isPublicMode={isAnonymousMode()}
                     />
                     <Dialogs settingsDrawerApiRef={this.settingsDrawerApiRef} />
                 </DashHotkeys>

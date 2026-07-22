@@ -249,6 +249,16 @@ function getChartsRoutes({
             handler: chartsEngine.controllers.embeds,
             authPolicy: AuthPolicy.disabled,
         },
+        // Anonymous dashboard-config load for an Embed. Resolves the dash from the signed Embed token
+        // (no id — the token identifies the object); the object stays private and is served only for a
+        // valid token (ADR 0003 / ticket 05). Mirrors getPublicDash for the embed path.
+        getApiEmbedDash: {
+            beforeAuth,
+            afterAuth,
+            route: 'GET /api/embed/dash',
+            handler: chartsEngine.controllers.embeddedEntry,
+            authPolicy: AuthPolicy.disabled,
+        },
         postApiExport: {
             beforeAuth,
             afterAuth,

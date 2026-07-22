@@ -645,8 +645,14 @@ export class USProvider {
         }
 
         const formattedHeaders = formatPassedHeaders(headersWithToken, ctx);
+        // The viewer is anonymous, so authenticate the storage read with the master token; US is the
+        // authoritative gate and only returns the dependency for a valid Embed token (ADR 0002/0003).
+        formattedHeaders[US_MASTER_TOKEN_HEADER] = ctx.config.usMasterToken as string;
         const axiosArgs: AxiosRequestConfig = {
-            url: `${storageEndpoint}/embeds/entries/${id}`,
+            // Resolve a dependent entry (chart) of an embedded dashboard by the token plus its id. US
+            // verifies the token and authorizes the entry as a dependency of the embed's dashboard,
+            // returning the same {token, embed, entry} shape as the single-object read (ticket 05).
+            url: `${storageEndpoint}${US_EMBEDDED_ENTRY_API_PATH}/${id}`,
             method: 'get',
             headers: injectMetadata(formattedHeaders, ctx),
             timeout: TIMEOUT_10_SEC,
@@ -659,9 +665,9 @@ export class USProvider {
                 ctx.log('UNITED_STORAGE_CONFIG_LOADED', {duration: getDuration(hrStart)});
 
                 return {
-                    token: response.data.embeddingInfo.token,
-                    embed: response.data.embeddingInfo.embed,
-                    entry: formatPassedProperties(response.data),
+                    token: response.data.token,
+                    embed: response.data.embed,
+                    entry: formatPassedProperties(response.data.entry),
                 };
             })
             .catch((error) => {
