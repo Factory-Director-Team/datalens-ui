@@ -1,0 +1,30 @@
+.dl-dialog-share {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &__loader {
+        display: flex;
+        justify-content: center;
+        padding: 24px 0;
+    }
+
+    &__hint {
+        color: var(--g-color-text-secondary);
+        font-size: var(--g-text-body-1-font-size);
+    }
+
+    &__link-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__link-input {
+        flex: 1 1 auto;
+    }
+
+    &__copy-button {
+        flex: 0 0 auto;
+    }
+}

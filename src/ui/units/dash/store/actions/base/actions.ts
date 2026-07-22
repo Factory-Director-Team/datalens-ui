@@ -9,6 +9,7 @@ import {closeDialog as closeDialogConfirm, openDialogConfirm} from 'store/action
 import type {DatalensGlobalState} from 'ui';
 import {MarkdownProvider, URL_QUERY, Utils} from 'ui';
 import type {ConnectionsReduxDispatch} from 'ui/units/connections/store';
+import {isPublicMode} from 'ui/utils/embedded';
 import type {ManualError} from 'ui/utils/errors/manual';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 import {getLoginOrIdFromLockedError, isEntryIsLockedError} from 'utils/errors/errorByCode';
@@ -275,13 +276,20 @@ export const load = ({
                 readDashParams.revId = revId;
             }
 
+            // On a public link there is no session: load the dash config via the anonymous public
+            // route (US public-read) and skip the saved hash-state read, which requires auth. In-session
+            // selectors/filters still work; only shared saved states are unavailable (ticket 03).
+            const isPublic = isPublicMode();
+
             const [entry, hashData] = await Promise.all([
                 // TODO Refactor old api schema
-                (sdk.charts as any).readDash({
-                    id: entryId,
-                    params: readDashParams,
-                }),
-                hash
+                isPublic
+                    ? (sdk.charts as any).readDashPublic({id: entryId})
+                    : (sdk.charts as any).readDash({
+                          id: entryId,
+                          params: readDashParams,
+                      }),
+                hash && !isPublic
                     ? getSdk()
                           .sdk.us.getDashState({
                               entryId,

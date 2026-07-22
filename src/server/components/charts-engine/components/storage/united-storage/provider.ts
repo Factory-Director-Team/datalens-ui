@@ -27,7 +27,12 @@ import {
     US_PUBLIC_API_TOKEN_HEADER,
     WORKBOOK_ID_HEADER,
 } from '../../../../../../shared';
-import {ErrorCode, TIMEOUT_10_SEC} from '../../../../../../shared/constants';
+import {
+    ErrorCode,
+    TIMEOUT_10_SEC,
+    US_PUBLIC_ENTRIES_API_PATH,
+} from '../../../../../../shared/constants';
+import {US_MASTER_TOKEN_HEADER} from '../../../../../../shared/constants/header';
 import {createErrorHandler} from '../../error-handler';
 import {getDuration} from '../../utils';
 import type {ChartEntryData, DashEntryData, EmbeddingInfo} from '../types';
@@ -332,6 +337,101 @@ export class USProvider {
             .request(axiosArgs)
             .then((response) => {
                 ctx.log('UNITED_STORAGE_CONFIG_LOADED', {duration: getDuration(hrStart)});
+
+                return formatPassedProperties(response.data);
+            })
+            .catch((error) => {
+                if (error.response && error.response.status === 404) {
+                    error.description = id;
+                    error.code = ENTRY_NOT_FOUND;
+                    error.status = 404;
+                    throw error;
+                } else if (error.response && error.response.status === 403) {
+                    error.description = id;
+                    error.code = ErrorCode.EntryForbidden;
+                    error.status = 403;
+                    throw error;
+                } else {
+                    throw handleError({
+                        code: 'UNITED_STORAGE_OBJECT_RETRIEVE_ERROR',
+                        meta: {extra: {id}},
+                        error,
+                        rethrow: false,
+                    });
+                }
+            });
+    }
+
+    // Fetches an entry for an anonymous public link via the US private public-read endpoint, which
+    // returns ONLY entries flagged public (ADR 0002). No user identity is involved; the internal US
+    // call is authenticated with the master token.
+    static retrieveByIdPublic(
+        ctx: AppContext,
+        {
+            id,
+            revId,
+            unreleased,
+            includeLinks,
+            headers,
+            extraAllowedHeaders,
+            workbookId,
+            publicDashId,
+        }: {
+            id: string;
+            extraAllowedHeaders?: string[];
+            unreleased: boolean | string;
+            includeLinks?: boolean | string;
+            revId?: string;
+            headers: Request['headers'];
+            workbookId?: WorkbookId;
+            publicDashId?: string;
+        },
+    ) {
+        const hrStart = process.hrtime();
+
+        const params: {
+            branch: 'saved' | 'published';
+            includeLinks?: boolean;
+            revId?: string;
+            publicDashId?: string;
+        } = {
+            branch: unreleased ? 'saved' : 'published',
+        };
+
+        if (includeLinks) {
+            params.includeLinks = true;
+        }
+
+        if (revId) {
+            params.revId = revId;
+        }
+
+        // When set, US authorizes this (non-public) chart as a dependency of the public dashboard
+        // rather than requiring the chart itself to be flagged public (ticket 03).
+        if (publicDashId) {
+            params.publicDashId = publicDashId;
+        }
+
+        const formattedHeaders = formatPassedHeaders(headers, ctx, extraAllowedHeaders);
+
+        formattedHeaders[US_MASTER_TOKEN_HEADER] = ctx.config.usMasterToken as string;
+
+        if (workbookId) {
+            formattedHeaders[WORKBOOK_ID_HEADER] = workbookId;
+        }
+
+        const axiosArgs: AxiosRequestConfig = {
+            url: `${storageEndpoint}${US_PUBLIC_ENTRIES_API_PATH}/${id}`,
+            method: 'get',
+            headers: injectMetadata(formattedHeaders, ctx),
+            params,
+            timeout: TIMEOUT_10_SEC,
+        };
+
+        return axios
+            .request(axiosArgs)
+            .then((response) => {
+                ctx.log('UNITED_STORAGE_PUBLIC_CONFIG_LOADED', {duration: getDuration(hrStart)});
 
                 return formatPassedProperties(response.data);
             })

@@ -7,6 +7,7 @@ import {getAuthArgs} from '../../../shared/schema/gateway-utils';
 import {appEnv, isApiMode, isChartsMode, isDatalensMode, isFullMode} from '../../app-env';
 import {getAuthRoutes} from '../../components/auth/routes';
 import type {ChartsEngine} from '../../components/charts-engine';
+import {publicController, publicDashController} from '../../controllers';
 import {ping} from '../../controllers/ping';
 import {workbooksTransferController} from '../../controllers/workbook-transfer';
 import {getConnectorIconsMiddleware} from '../../middlewares';
@@ -139,6 +140,22 @@ function getDataLensRoutes({
 
         getWizardAll: getConfiguredRoute('dl-main', {...ui, route: 'GET /wizard/*'}),
         getPreview: getConfiguredRoute('dl-main', {...ui, route: 'GET /preview*'}),
+        // Anonymous public-link page for a single chart or dashboard. Auth is disabled so viewers
+        // need no login; US serves the underlying data only if the entry is flagged public (ADR 0002).
+        getPublicEntry: {
+            ...ui,
+            route: 'GET /public/:entryId',
+            handler: publicController,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous dashboard-config load for a public link. Resolves the dash via US public-read
+        // (master token, only-public), so it returns a config only for a public dashboard (ticket 03).
+        getPublicDash: {
+            ...server,
+            route: 'GET /api/public/dash/:id',
+            handler: publicDashController,
+            authPolicy: AuthPolicy.disabled,
+        },
         getWorkbooks: getConfiguredRoute('dl-main', {...ui, route: 'GET /workbooks*'}),
 
         postDeleteLock: getConfiguredRoute('api.deleteLock', {
@@ -205,6 +222,15 @@ function getChartsRoutes({
             afterAuth,
             route: 'POST /api/run',
             handler: chartsEngine.controllers.run,
+        },
+        // Anonymous run for a public link (no login). Config is resolved via the US public-read
+        // endpoint, which returns only public entries (ADR 0002).
+        postApiPublicRun: {
+            beforeAuth,
+            afterAuth,
+            route: 'POST /api/public/run',
+            handler: chartsEngine.controllers.publicRun,
+            authPolicy: AuthPolicy.disabled,
         },
         postApiExport: {
             beforeAuth,

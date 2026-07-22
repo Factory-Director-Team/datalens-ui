@@ -230,6 +230,9 @@ export type DLGlobalData = {
               mode: 'chart';
           }
         | boolean;
+    // Marks the served HTML as an anonymous public-link page (no login). The client reads it via
+    // DL.PUBLIC to render chromelessly and route chart runs through /api/public/run (ADR 0002).
+    public?: boolean;
     apiPrefix?: string;
     docPathName?: DocPathName;
     chartkitSettings?: ChartkitGlobalSettings;

@@ -1,0 +1,11 @@
+{
+  "label_title": "Sharing",
+  "label_public-link": "Public link",
+  "label_public-link-hint": "Anyone with the link can view it without signing in.",
+  "button_copy": "Copy link",
+  "button_close": "Close",
+  "label_loading-failed": "Failed to load",
+  "toast_link-copied": "Link copied",
+  "toast_publication-success": "Public access changed",
+  "toast_publication-failed": "Failed to change public access"
+}

@@ -4,6 +4,8 @@ import {stringify} from 'querystring';
 import type {AppContext} from '@gravity-ui/nodekit';
 import pick from 'lodash/pick';
 
+import {US_PUBLIC_ENTRIES_API_PATH} from '../../../shared/constants/entry';
+import {US_MASTER_TOKEN_HEADER} from '../../../shared/constants/header';
 import type {GetEntryByKeyResponse, GetEntryMetaResponse} from '../../../shared/schema';
 import {filterUrlFragment} from '../../../shared/schema/utils';
 import type {
@@ -61,6 +63,39 @@ class US {
             return data;
         } catch (error) {
             ctx.logError('SDK_US_READ_ENTRY_FAILED', error, {entryId, params});
+
+            throw error;
+        }
+    }
+
+    // Reads an entry for the anonymous public path via the US public-read endpoint, which returns
+    // ONLY entries flagged public (ADR 0002). Authenticated with the master token, no user identity.
+    // Used to load a public dashboard's config; see ticket 03.
+    static async readPublicEntry(
+        entryId: string,
+        params: EntryReadParams | null,
+        headers: IncomingHttpHeaders,
+        ctx: AppContext,
+    ): Promise<Entry> {
+        try {
+            const {data} = await getAxios(ctx.config)({
+                method: 'GET',
+                url: `${ctx.config.endpoints.api.us}${US_PUBLIC_ENTRIES_API_PATH}/${filterUrlFragment(
+                    entryId,
+                )}`,
+                headers: {
+                    ...headers,
+                    [US_MASTER_TOKEN_HEADER]: ctx.config.usMasterToken as string,
+                },
+                params,
+                'axios-retry': {retries: 1},
+            });
+
+            ctx.log('SDK_US_READ_PUBLIC_ENTRY_SUCCESS', US.getLoggedEntry(data));
+
+            return data;
+        } catch (error) {
+            ctx.logError('SDK_US_READ_PUBLIC_ENTRY_FAILED', error, {entryId, params});
 
             throw error;
         }

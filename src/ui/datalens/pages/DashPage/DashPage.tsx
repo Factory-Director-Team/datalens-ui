@@ -18,6 +18,8 @@ const routePaths = [
     '/dashboards/new',
     '/workbooks/:workbookId/dashboards',
     '/workbooks/:workbookId/dash',
+    // Anonymous public dashboard link (ticket 03); the DashApp renders chromelessly in public mode.
+    '/public/:id',
     '/:id',
 ];
 

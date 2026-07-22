@@ -28,3 +28,7 @@ export const isNoScrollMode = () => {
 };
 
 export const isEmbeddedEntry = () => Boolean(DL.EMBED);
+
+// True on the anonymous public-link page. Used to render chromelessly (no aside/mobile header) and to
+// route chart runs to the anonymous /api/public/run endpoint.
+export const isPublicMode = () => DL.PUBLIC;

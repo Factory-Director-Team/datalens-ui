@@ -32,6 +32,7 @@ type Controllers = {
     export: ReturnType<typeof exportController>;
     markdown: typeof markdownController;
     run: ReturnType<typeof runController>;
+    publicRun: ReturnType<typeof runController>;
     config: ReturnType<typeof configController>;
     charts: ReturnType<typeof chartsController>;
     embeds: ReturnType<typeof embedsController>;
@@ -96,6 +97,11 @@ class ChartsEngine {
             export: defaultControllers.export(),
             markdown: defaultControllers.markdown,
             run: defaultControllers.run(this, {includeServicePlan, includeTenantFeatures}),
+            publicRun: defaultControllers.run(this, {
+                includeServicePlan,
+                includeTenantFeatures,
+                isPublic: true,
+            }),
             config: defaultControllers.config(this),
             charts: defaultControllers.charts(this),
             embeds: defaultControllers.embeds(this),

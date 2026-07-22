@@ -1,6 +1,6 @@
 import type {IncomingHttpHeaders} from 'http';
 
-import {CHARTS_API_BASE_URL, DASH_API_BASE_URL} from '../constants';
+import {CHARTS_API_BASE_URL, DASH_API_BASE_URL, PUBLIC_DASH_API_BASE_URL} from '../constants';
 import type {Endpoints} from '../endpoints';
 import {filterUrlFragment} from '../schema/utils';
 import type {
@@ -151,6 +151,21 @@ const CHARTS_API_SCHEMA = {
         url: `${endpoints.charts}${DASH_API_BASE_URL}/${filterUrlFragment(id)}`,
         headers,
         params,
+    }),
+    // Anonymous dashboard-config load for a public link. Hits the auth-disabled public route, which
+    // resolves the dash via US public-read (ticket 03).
+    readDashPublic: (
+        headers: IncomingHttpHeaders,
+        endpoints: UiEndpoints,
+        {
+            id,
+        }: {
+            id: string;
+        },
+    ) => ({
+        method: 'get',
+        url: `${endpoints.charts}${PUBLIC_DASH_API_BASE_URL}/${filterUrlFragment(id)}`,
+        headers,
     }),
     updateDash: (
         headers: IncomingHttpHeaders,

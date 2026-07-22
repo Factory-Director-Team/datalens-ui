@@ -1,0 +1,11 @@
+{
+  "label_title": "Публичный доступ",
+  "label_public-link": "Публичная ссылка",
+  "label_public-link-hint": "Любой, у кого есть ссылка, сможет открыть её без входа в аккаунт.",
+  "button_copy": "Скопировать ссылку",
+  "button_close": "Закрыть",
+  "label_loading-failed": "Не удалось загрузить",
+  "toast_link-copied": "Ссылка скопирована",
+  "toast_publication-success": "Публичный доступ изменён",
+  "toast_publication-failed": "Не удалось изменить публичный доступ"
+}

@@ -251,6 +251,15 @@ export interface SwitchPublicationStatusEntry extends EntryMetaFields {
 
 export type SwitchPublicationStatusResponse = SwitchPublicationStatusEntry[];
 
+export interface SwitchEntryPublicationStatusArgs {
+    entryId: string;
+    publish: boolean;
+}
+
+export interface SwitchEntryPublicationStatusResponse {
+    public: boolean;
+}
+
 export interface SwitchPublicationStatusArgs {
     entries: {
         entryId: string;

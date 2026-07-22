@@ -303,14 +303,17 @@ class Dash {
         params: EntryReadParams | null,
         headers: IncomingHttpHeaders,
         ctx: AppContext,
-        options?: {forceMigrate?: boolean},
+        options?: {forceMigrate?: boolean; isPublic?: boolean},
     ): Promise<DashEntry> {
         try {
             const headersWithMetadata = {
                 ...headers,
                 ...ctx.getMetadata(),
             };
-            const result = await US.readEntry(entryId, params, headersWithMetadata, ctx).then(
+            // On the anonymous public path the dash is resolved via US public-read (master token,
+            // only-public) so it is served only when the dashboard is public (ticket 03).
+            const readEntry = options?.isPublic ? US.readPublicEntry : US.readEntry;
+            const result = await readEntry(entryId, params, headersWithMetadata, ctx).then(
                 (entry) => Dash.migrateDescriptionForClient(entry as DashEntry),
             );
 

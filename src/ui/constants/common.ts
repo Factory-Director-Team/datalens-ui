@@ -223,6 +223,16 @@ export const DL = {
     get EMBED() {
         return window.DL.embed;
     },
+    // True on an anonymous public-link page (served with DL.public). Drives chromeless rendering and
+    // routing chart runs through /api/public/run.
+    get PUBLIC() {
+        return Boolean(window.DL.public);
+    },
+    // Scope of the entry served on a public-link page ('dash' | 'widget'), resolved server-side so the
+    // page mounts the right chromeless view (a dashboard or a single chart) with no flash.
+    get PUBLIC_SCOPE() {
+        return window.DL.publicScope;
+    },
     get DOC_PATH_NAME() {
         return window.DL.docPathName;
     },

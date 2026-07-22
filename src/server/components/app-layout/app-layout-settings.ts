@@ -4,7 +4,7 @@ import type {Request, Response} from '@gravity-ui/expresskit';
 import type {AppLayoutSettings, AppLayoutSettingsName} from '../../types/app-layout';
 export const getAppLayoutSettings = (
     req: Request,
-    _res: Response,
+    res: Response,
     settingsId?: string,
 ): AppLayoutSettings => {
     const config = req.ctx.config;
@@ -51,6 +51,19 @@ export const getAppLayoutSettings = (
             return {
                 renderConfig: {title: config.serviceName},
                 DL: {},
+                bundleName: 'dl-main',
+            };
+        }
+        case 'public': {
+            // Anonymous public-link page. DL.public makes the client render chromelessly and route
+            // runs through /api/public/run (ADR 0002); DL.publicScope (resolved by publicController)
+            // tells it whether to mount a single chart or a dashboard.
+            return {
+                renderConfig: {title: config.serviceName},
+                DL: {
+                    public: true,
+                    publicScope: res.locals.publicScope as 'dash' | 'widget' | undefined,
+                },
                 bundleName: 'dl-main',
             };
         }

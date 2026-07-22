@@ -17,7 +17,7 @@ import {Feature} from '../../../../../shared/types/feature';
 import {getIsAsideHeaderEnabled} from '../../../../components/AsideHeaderAdapter';
 import type {CurrentPageEntry} from '../../../../components/Navigation/types';
 import {DL} from '../../../../constants/common';
-import {isEmbeddedMode} from '../../../../utils/embedded';
+import {isEmbeddedMode, isPublicMode} from '../../../../utils/embedded';
 import {useIframeFeatures} from '../../hooks/useIframeFeatures';
 import {dispatchResize} from '../../modules/helpers';
 import {PostMessage, PostMessageCode} from '../../modules/postMessage';
@@ -51,7 +51,8 @@ export function App({...routeProps}: RouteComponentProps) {
 
     const dispatch = useDispatch();
 
-    const isEmbedded = isEmbeddedMode();
+    // A public link renders chromeless just like an embedded view (no aside header, no footer).
+    const isEmbedded = isEmbeddedMode() || isPublicMode();
 
     const isAsideHeaderEnabled = getIsAsideHeaderEnabled();
 

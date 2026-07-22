@@ -31,7 +31,7 @@ import {
     WidgetKind,
 } from 'shared';
 import {DL} from 'ui/constants/common';
-import {isEmbeddedEntry} from 'ui/utils/embedded';
+import {isEmbeddedEntry, isPublicMode} from 'ui/utils/embedded';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 
 import type {ChartWidgetData} from '../../../../../components/Widgets/Chart/types';
@@ -144,6 +144,9 @@ export interface EntityRequestOptions {
             widgetId?: string;
         };
         workbookId?: WorkbookId;
+        // Set on the anonymous public path so US can authorize a dependent chart of a public
+        // dashboard via the dashboard's links (ticket 03).
+        publicDashId?: string;
     };
     headers?: Record<string, any>;
     cancelToken?: CancelTokenSource['token'];
@@ -158,6 +161,17 @@ const CANCEL_REQUEST_CODE = 'REQUEST_CANCELED';
 
 function isResponseSuccessNode(data: ResponseSuccess): data is ResponseSuccessNode {
     return 'type' in data;
+}
+
+// Extracts the entry id from the current /public/:id URL (stripping any slug suffix). On a public
+// dashboard this is the dashboard's id, which US uses to authorize dependent charts (ticket 03).
+function getPublicEntryId(): string | undefined {
+    const match = window.location.pathname.match(/^\/public\/([^/?#]+)/);
+    if (!match) {
+        return undefined;
+    }
+    const extractEntryId = registry.common.functions.get('extractEntryId');
+    return extractEntryId(match[1]) || undefined;
 }
 
 class ChartsDataProvider implements DataProvider<ChartsProps, ChartsData, CancelTokenSource> {
@@ -841,9 +855,22 @@ class ChartsDataProvider implements DataProvider<ChartsProps, ChartsData, Cancel
             headers[DL_EMBED_TOKEN_HEADER] = getSecureEmbeddingToken();
         }
 
+        // On an anonymous public-link page there is no session, so the run goes to the auth-disabled
+        // public endpoint, which resolves the config via the US public-read path (ADR 0002).
+        const runPath = isPublicMode() ? '/public/run' : '/run';
+
+        // On a public dashboard, dependent charts are not themselves public: pass the dashboard id
+        // (the /public/:id URL segment) so US authorizes them via the dashboard's links (ticket 03).
+        if (isPublicMode() && requestOptions.data && !requestOptions.data.publicDashId) {
+            const publicEntryId = getPublicEntryId();
+            if (publicEntryId) {
+                requestOptions.data.publicDashId = publicEntryId;
+            }
+        }
+
         return axiosInstance(
             this.prepareRequestConfig({
-                url: `${this.requestEndpoint}${DL.API_PREFIX}/run`,
+                url: `${this.requestEndpoint}${DL.API_PREFIX}${runPath}`,
                 method: 'post',
                 ...requestOptions,
                 headers,
