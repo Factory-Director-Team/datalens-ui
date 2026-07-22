@@ -67,6 +67,20 @@ export const getAppLayoutSettings = (
                 bundleName: 'dl-main',
             };
         }
+        case 'embed': {
+            // Anonymous Embed page (variant B). DL.embed makes the client render chromelessly and
+            // attach the Embed token to chart runs; the token itself rides in DL.embedToken so the
+            // client's getSecureEmbeddingToken can read it. Authorization is enforced in US (ADR 0003).
+            return {
+                renderConfig: {title: config.serviceName},
+                DL: {
+                    embed: {mode: 'chart'},
+                    embedToken: res.locals.embedToken as string | undefined,
+                    embedEntryId: res.locals.embedEntryId as string | undefined,
+                },
+                bundleName: 'dl-main',
+            };
+        }
         default: {
             return {
                 renderConfig: {title: 'default'},

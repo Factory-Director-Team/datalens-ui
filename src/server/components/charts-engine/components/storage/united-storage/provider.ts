@@ -30,6 +30,7 @@ import {
 import {
     ErrorCode,
     TIMEOUT_10_SEC,
+    US_EMBEDDED_ENTRY_API_PATH,
     US_PUBLIC_ENTRIES_API_PATH,
 } from '../../../../../../shared/constants';
 import {US_MASTER_TOKEN_HEADER} from '../../../../../../shared/constants/header';
@@ -564,8 +565,11 @@ export class USProvider {
             params.includeTenantFeatures = true;
         }
         const formattedHeaders = formatPassedHeaders(headersWithToken, ctx);
+        // The viewer is anonymous, so authenticate the storage read with the master token; US is the
+        // authoritative gate and only returns the object if the Embed token verifies (ADR 0002/0003).
+        formattedHeaders[US_MASTER_TOKEN_HEADER] = ctx.config.usMasterToken as string;
         const axiosArgs: AxiosRequestConfig = {
-            url: `${storageEndpoint}/v1/embedded-entry`,
+            url: `${storageEndpoint}${US_EMBEDDED_ENTRY_API_PATH}`,
             method: 'get',
             headers: injectMetadata(formattedHeaders, ctx),
             timeout: TIMEOUT_10_SEC,

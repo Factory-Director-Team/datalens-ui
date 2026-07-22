@@ -855,9 +855,15 @@ class ChartsDataProvider implements DataProvider<ChartsProps, ChartsData, Cancel
             headers[DL_EMBED_TOKEN_HEADER] = getSecureEmbeddingToken();
         }
 
-        // On an anonymous public-link page there is no session, so the run goes to the auth-disabled
-        // public endpoint, which resolves the config via the US public-read path (ADR 0002).
-        const runPath = isPublicMode() ? '/public/run' : '/run';
+        // On an anonymous page there is no session, so the run goes to an auth-disabled endpoint: the
+        // public-read path for a public link (ADR 0002), or the Embed-token path for an embed, which
+        // resolves the config in US against the signed token in the x-dl-embed-token header (ADR 0003).
+        let runPath = '/run';
+        if (isPublicMode()) {
+            runPath = '/public/run';
+        } else if (isEmbeddedEntry()) {
+            runPath = '/embed/run';
+        }
 
         // On a public dashboard, dependent charts are not themselves public: pass the dashboard id
         // (the /public/:id URL segment) so US authorizes them via the dashboard's links (ticket 03).

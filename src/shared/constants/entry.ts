@@ -20,6 +20,10 @@ export const PUBLIC_ROUTE = 'public';
 // and the charts-engine storage provider call.
 export const US_PUBLIC_ENTRIES_API_PATH = '/private/public-entries';
 
+// US private endpoint that resolves an Embed token to its (private) object (server→US, ADR 0002/0003).
+// The Embed token in the `x-dl-embed-token` header is the capability; US verifies its signature.
+export const US_EMBEDDED_ENTRY_API_PATH = '/private/embedded-entry';
+
 export const ENTRY_ROUTES = [
     NAVIGATION_ROUTE,
     DASHBOARDS_ROUTE,

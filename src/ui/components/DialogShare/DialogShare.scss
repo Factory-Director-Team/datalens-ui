@@ -27,4 +27,34 @@
     &__copy-button {
         flex: 0 0 auto;
     }
+
+    &__mode {
+        margin-bottom: 4px;
+    }
+
+    &__params {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__params-title {
+        color: var(--g-color-text-secondary);
+        font-size: var(--g-text-body-1-font-size);
+    }
+
+    &__param-row {
+        display: flex;
+        align-items: center;
+    }
+
+    &__create-button {
+        align-self: flex-start;
+    }
+
+    &__snippet {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
 }

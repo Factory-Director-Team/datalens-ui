@@ -245,7 +245,10 @@ function processEntry(
     return null;
 }
 
-async function filterParams({
+// Merges the incoming (iframe URL) parameters against the Embed's locked/open contract: the token's
+// params are enforced as constants, and — in publicParamsMode — only the `unsignedParams` allowlist is
+// honored from the URL, everything else is dropped (ticket 04). Exported for unit coverage.
+export async function filterParams({
     params = {},
     embeddingInfo,
 }: {

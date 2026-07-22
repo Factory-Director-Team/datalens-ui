@@ -230,6 +230,12 @@ export type DLGlobalData = {
               mode: 'chart';
           }
         | boolean;
+    // The signed Embed token carried from the iframe URL into the anonymous embed page; the client
+    // reads it (getSecureEmbeddingToken) and attaches it to chart runs as x-dl-embed-token (ticket 04).
+    embedToken?: string;
+    // Id of the embedded object, resolved server-side from the token so the anonymous embed page mounts
+    // the chart with no flash (ticket 04).
+    embedEntryId?: string;
     // Marks the served HTML as an anonymous public-link page (no login). The client reads it via
     // DL.PUBLIC to render chromelessly and route chart runs through /api/public/run (ADR 0002).
     public?: boolean;

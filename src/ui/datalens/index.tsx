@@ -10,7 +10,7 @@ import DashAndWizardQLPages, {
     dashAndWizardQLRoutes,
 } from './pages/DashAndWizardQLPages/DashAndWizardQLPages';
 import {locationChangeHandler} from './helpers';
-import {isEmbeddedMode, isPublicMode, isTvMode} from '../utils/embedded';
+import {isEmbeddedEntry, isEmbeddedMode, isPublicMode, isTvMode} from '../utils/embedded';
 import {reducerRegistry} from '../store';
 import {AsideHeaderAdapter} from 'ui/components/AsideHeaderAdapter/AsideHeaderAdapter';
 import {MobileHeaderComponent} from 'ui/components/MobileHeader/MobileHeaderComponent/MobileHeaderComponent';
@@ -30,6 +30,7 @@ reducerRegistry.registerMiddleware(chartkitApi.middleware);
 const DatasetPage = React.lazy(() => import('./pages/DatasetPage/DatasetPage'));
 const PreviewPage = React.lazy(() => import('./pages/PreviewPage/PreviewPage'));
 const PublicPage = React.lazy(() => import('./pages/PublicPage/PublicPage'));
+const EmbedPage = React.lazy(() => import('./pages/EmbedPage/EmbedPage'));
 const ConnectionsPage = React.lazy(
     () =>
         import(
@@ -84,6 +85,8 @@ const DatalensPageView = () => {
 
                 <Route path="/public/:id" component={PublicPage} />
 
+                <Route path="/embed" component={EmbedPage} />
+
                 {/* Prevent attempts to create a standalone (outside of workbook) connection */}
                 <Route path={['/connections/new/:type', '/connections/new']}>
                     <Redirect to={`/collections${location.search}`} />
@@ -124,9 +127,14 @@ const DatalensPageView = () => {
 
 const DatalensPage: React.FC = () => {
     const showAsideHeaderAdapter =
-        getIsAsideHeaderEnabled() && !isEmbeddedMode() && !isTvMode() && !isPublicMode();
+        getIsAsideHeaderEnabled() &&
+        !isEmbeddedMode() &&
+        !isEmbeddedEntry() &&
+        !isTvMode() &&
+        !isPublicMode();
     const showMobileHeader =
         !isEmbeddedMode() &&
+        !isEmbeddedEntry() &&
         !isPublicMode() &&
         DL.IS_MOBILE &&
         !DL.IS_NOT_AUTHENTICATED &&

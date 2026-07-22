@@ -7,7 +7,7 @@ import {getAuthArgs} from '../../../shared/schema/gateway-utils';
 import {appEnv, isApiMode, isChartsMode, isDatalensMode, isFullMode} from '../../app-env';
 import {getAuthRoutes} from '../../components/auth/routes';
 import type {ChartsEngine} from '../../components/charts-engine';
-import {publicController, publicDashController} from '../../controllers';
+import {embedController, publicController, publicDashController} from '../../controllers';
 import {ping} from '../../controllers/ping';
 import {workbooksTransferController} from '../../controllers/workbook-transfer';
 import {getConnectorIconsMiddleware} from '../../middlewares';
@@ -156,6 +156,14 @@ function getDataLensRoutes({
             handler: publicDashController,
             authPolicy: AuthPolicy.disabled,
         },
+        // Anonymous Embed page (variant B): the iframe src. Auth is disabled so it renders with no
+        // login; the signed Embed token in the URL is the capability, verified in US (ADR 0003).
+        getEmbed: {
+            ...ui,
+            route: 'GET /embed',
+            handler: embedController,
+            authPolicy: AuthPolicy.disabled,
+        },
         getWorkbooks: getConfiguredRoute('dl-main', {...ui, route: 'GET /workbooks*'}),
 
         postDeleteLock: getConfiguredRoute('api.deleteLock', {
@@ -230,6 +238,15 @@ function getChartsRoutes({
             afterAuth,
             route: 'POST /api/public/run',
             handler: chartsEngine.controllers.publicRun,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous run for an Embed (no login). The Embed token in the x-dl-embed-token header is
+        // validated in US; locked/open parameters are enforced here in the embeds controller (ticket 04).
+        postApiEmbedRun: {
+            beforeAuth,
+            afterAuth,
+            route: 'POST /api/embed/run',
+            handler: chartsEngine.controllers.embeds,
             authPolicy: AuthPolicy.disabled,
         },
         postApiExport: {

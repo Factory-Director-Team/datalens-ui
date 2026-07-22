@@ -1,11 +1,22 @@
 {
   "label_title": "Публичный доступ",
+  "label_mode-public": "Публичная ссылка",
+  "label_mode-embed": "Встраивание",
   "label_public-link": "Публичная ссылка",
   "label_public-link-hint": "Любой, у кого есть ссылка, сможет открыть её без входа в аккаунт.",
+  "label_embed-hint": "Встройте этот чарт в любую страницу. Объект остаётся приватным; подписанный токен даёт доступ только к этому встраиванию.",
+  "label_lock-params": "Зафиксировать параметры",
+  "label_no-params": "У этого чарта нет параметров.",
   "button_copy": "Скопировать ссылку",
+  "button_copy-snippet": "Скопировать сниппет",
+  "button_create-embed": "Создать встраивание",
+  "button_regenerate-embed": "Обновить встраивание",
   "button_close": "Закрыть",
   "label_loading-failed": "Не удалось загрузить",
   "toast_link-copied": "Ссылка скопирована",
+  "toast_snippet-copied": "Сниппет скопирован",
+  "toast_embed-created": "Встраивание создано",
+  "toast_embed-failed": "Не удалось создать встраивание",
   "toast_publication-success": "Публичный доступ изменён",
   "toast_publication-failed": "Не удалось изменить публичный доступ"
 }

@@ -8,7 +8,8 @@ export type AppLayoutSettingsName =
     | 'navigation'
     | 'landing-layout'
     | 'auth-layout'
-    | 'public';
+    | 'public'
+    | 'embed';
 
 export type AppLayoutSettings = {
     renderConfig: RenderParams<{DL: DLGlobalData}>;

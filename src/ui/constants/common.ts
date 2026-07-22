@@ -223,6 +223,16 @@ export const DL = {
     get EMBED() {
         return window.DL.embed;
     },
+    // The signed Embed token served on an anonymous Embed page (variant B). The client attaches it to
+    // chart runs as x-dl-embed-token so US can resolve the (private) object (ticket 04).
+    get EMBED_TOKEN() {
+        return window.DL.embedToken || '';
+    },
+    // Id of the embedded object, resolved server-side from the token so the anonymous embed page mounts
+    // the chart with no flash (ticket 04).
+    get EMBED_ENTRY_ID() {
+        return window.DL.embedEntryId;
+    },
     // True on an anonymous public-link page (served with DL.public). Drives chromeless rendering and
     // routing chart runs through /api/public/run.
     get PUBLIC() {
