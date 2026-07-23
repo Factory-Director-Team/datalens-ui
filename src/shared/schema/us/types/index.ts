@@ -12,6 +12,7 @@ export * from './workbooks';
 export * from './collections';
 export * from './color-palettes';
 export * from './embeds';
+export * from './embedding-secrets';
 export * from './operations';
 export * from './sort';
 export * from './tenant';

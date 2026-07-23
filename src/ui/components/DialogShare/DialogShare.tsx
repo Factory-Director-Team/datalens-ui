@@ -14,6 +14,7 @@ import {toaster} from '@gravity-ui/uikit/toaster-singleton';
 import block from 'bem-cn-lite';
 import {I18n} from 'i18n';
 import {DL_EMBED_TOKEN_SEARCH_PARAM, Feature} from 'shared';
+import type {Embed} from 'shared/schema';
 import {CLIPBOARD_TIMEOUT} from 'ui/constants/common';
 import {getSdk} from 'ui/libs/schematic-sdk';
 import type {DialogShareProps} from 'ui/registry/units/common/types/components/DialogShare';
@@ -59,6 +60,27 @@ export const DialogShare: React.FC<DialogShareProps> = (props) => {
     const [isCreatingEmbed, setIsCreatingEmbed] = React.useState(false);
     const [embedToken, setEmbedToken] = React.useState<string | null>(null);
 
+    // The workbook the object lives in — needed to rotate its Embedding secret (ticket 06). The list of
+    // Embeds that already exist for the object lets an editor see what is published and revoke one.
+    const [workbookId, setWorkbookId] = React.useState<string | null>(null);
+    const [embeds, setEmbeds] = React.useState<Embed[]>([]);
+    const [deletingEmbedId, setDeletingEmbedId] = React.useState<string | null>(null);
+    const [isRotating, setIsRotating] = React.useState(false);
+
+    const refreshEmbeds = React.useCallback(() => {
+        if (!entryId) {
+            return;
+        }
+
+        getSdk()
+            .sdk.us.listEmbeds({entryId})
+            .then(setEmbeds)
+            .catch(() => {
+                // Listing is best-effort — a failure just leaves the list empty; it never blocks
+                // creating or copying an embed.
+            });
+    }, [entryId]);
+
     React.useEffect(() => {
         if (!isFeatureEnabled || !entryId) {
             setIsLoading(false);
@@ -68,11 +90,17 @@ export const DialogShare: React.FC<DialogShareProps> = (props) => {
         let cancelled = false;
         setIsLoading(true);
 
-        getSdk()
-            .sdk.us.getEntry({entryId})
-            .then((entry) => {
+        Promise.all([
+            getSdk().sdk.us.getEntry({entryId}),
+            getSdk()
+                .sdk.us.listEmbeds({entryId})
+                .catch(() => [] as Embed[]),
+        ])
+            .then(([entry, existingEmbeds]) => {
                 if (!cancelled) {
                     setIsPublic(entry.public);
+                    setWorkbookId(entry.workbookId ?? null);
+                    setEmbeds(existingEmbeds);
                     setIsLoading(false);
                 }
             })
@@ -170,6 +198,8 @@ export const DialogShare: React.FC<DialogShareProps> = (props) => {
             .then((response) => {
                 setEmbedToken(response.token);
                 setIsCreatingEmbed(false);
+                // Surface the newly-created embed in the "existing embeds" list right away.
+                refreshEmbeds();
                 toaster.add({
                     name: 'dialogShareEmbedCreated',
                     theme: 'success',
@@ -184,7 +214,62 @@ export const DialogShare: React.FC<DialogShareProps> = (props) => {
                     title: i18n('toast_embed-failed'),
                 });
             });
-    }, [entryId, paramNames, lockedParams, chartParams]);
+    }, [entryId, paramNames, lockedParams, chartParams, refreshEmbeds]);
+
+    const handleDeleteEmbed = React.useCallback((embedId: string) => {
+        setDeletingEmbedId(embedId);
+
+        getSdk()
+            .sdk.us.deleteEmbed({embedId})
+            .then(() => {
+                setDeletingEmbedId(null);
+                // Drop it locally — its iframe now fails closed everywhere it is pasted (ADR 0003).
+                setEmbeds((prev) => prev.filter((embed) => embed.embedId !== embedId));
+                toaster.add({
+                    name: 'dialogShareEmbedDeleted',
+                    theme: 'success',
+                    title: i18n('toast_embed-deleted'),
+                });
+            })
+            .catch(() => {
+                setDeletingEmbedId(null);
+                toaster.add({
+                    name: 'dialogShareEmbedDeleteFailed',
+                    theme: 'danger',
+                    title: i18n('toast_embed-delete-failed'),
+                });
+            });
+    }, []);
+
+    const handleRotateSecret = React.useCallback(() => {
+        if (!workbookId) {
+            return;
+        }
+
+        setIsRotating(true);
+
+        getSdk()
+            .sdk.us.rotateEmbeddingSecret({workbookId})
+            .then(() => {
+                setIsRotating(false);
+                // Every previously-issued token is now dead — including the one just generated in this
+                // session. The embed records remain (an editor can delete the stale ones).
+                setEmbedToken(null);
+                toaster.add({
+                    name: 'dialogShareSecretRotated',
+                    theme: 'success',
+                    title: i18n('toast_secret-rotated'),
+                });
+            })
+            .catch(() => {
+                setIsRotating(false);
+                toaster.add({
+                    name: 'dialogShareSecretRotateFailed',
+                    theme: 'danger',
+                    title: i18n('toast_secret-rotate-failed'),
+                });
+            });
+    }, [workbookId]);
 
     const handleCopy = React.useCallback(
         (titleKey: 'toast_link-copied' | 'toast_snippet-copied') => {
@@ -275,6 +360,37 @@ export const DialogShare: React.FC<DialogShareProps> = (props) => {
                             </Button>
                         )}
                     </CopyToClipboard>
+                </div>
+            )}
+            {embeds.length > 0 && (
+                <div className={b('embeds')}>
+                    <div className={b('embeds-title')}>{i18n('label_existing-embeds')}</div>
+                    {embeds.map((embed) => (
+                        <div key={embed.embedId} className={b('embed-row')}>
+                            <span className={b('embed-title')}>{embed.title}</span>
+                            <Button
+                                view="flat-danger"
+                                size="s"
+                                loading={deletingEmbedId === embed.embedId}
+                                onClick={() => handleDeleteEmbed(embed.embedId)}
+                            >
+                                {i18n('button_delete')}
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {workbookId && (
+                <div className={b('rotate')}>
+                    <div className={b('hint')}>{i18n('label_rotate-hint')}</div>
+                    <Button
+                        view="outlined-danger"
+                        loading={isRotating}
+                        onClick={handleRotateSecret}
+                        className={b('rotate-button')}
+                    >
+                        {i18n('button_rotate-secret')}
+                    </Button>
                 </div>
             )}
         </div>

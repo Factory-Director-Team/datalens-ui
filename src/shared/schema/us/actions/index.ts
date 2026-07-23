@@ -1,6 +1,7 @@
 import {collectionsActions} from './collections';
 import {colorPalettesActions} from './color-palettes';
 import {editorActions} from './editor';
+import {embeddingSecretsActions} from './embedding-secrets';
 import {embedsActions} from './embeds';
 import {entriesActions} from './entries';
 import {favoritesActions} from './favorites';
@@ -28,6 +29,7 @@ export const actions = {
     ...workbooksActions,
     ...colorPalettesActions,
     ...embedsActions,
+    ...embeddingSecretsActions,
     ...operationsActions,
     ...tenantActions,
 };
