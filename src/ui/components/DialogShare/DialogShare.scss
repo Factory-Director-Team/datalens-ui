@@ -1,0 +1,98 @@
+.dl-dialog-share {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    &__loader {
+        display: flex;
+        justify-content: center;
+        padding: 24px 0;
+    }
+
+    &__hint {
+        color: var(--g-color-text-secondary);
+        font-size: var(--g-text-body-1-font-size);
+    }
+
+    &__link-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    &__link-input {
+        flex: 1 1 auto;
+    }
+
+    &__copy-button {
+        flex: 0 0 auto;
+    }
+
+    &__mode {
+        margin-bottom: 4px;
+    }
+
+    &__params {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__params-title {
+        color: var(--g-color-text-secondary);
+        font-size: var(--g-text-body-1-font-size);
+    }
+
+    &__param-row {
+        display: flex;
+        align-items: center;
+    }
+
+    &__create-button {
+        align-self: flex-start;
+    }
+
+    &__snippet {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    &__embeds {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        border-top: 1px solid var(--g-color-line-generic);
+        padding-top: 12px;
+    }
+
+    &__embeds-title {
+        color: var(--g-color-text-secondary);
+        font-size: var(--g-text-body-1-font-size);
+    }
+
+    &__embed-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    &__embed-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &__rotate {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        border-top: 1px solid var(--g-color-line-generic);
+        padding-top: 12px;
+    }
+
+    &__rotate-button {
+        align-self: flex-start;
+    }
+}

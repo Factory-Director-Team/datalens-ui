@@ -25,6 +25,7 @@ import {closeDialog, openWarningDialog} from 'ui/store/actions/dialog';
 import {showToast} from 'ui/store/actions/toaster';
 import {addWorkbookInfo, resetWorkbookPermissions} from 'ui/units/workbooks/store/actions';
 import Utils, {formDocsEndpointDL} from 'ui/utils';
+import {isAnonymousMode} from 'ui/utils/embedded';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 
 import {
@@ -111,7 +112,9 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
             this.props.setPageTab(tabId);
         }
 
-        if (isEnabledFeature(Feature.AuthUpdateWithTimeout)) {
+        // Anonymous public or embedded viewers have no session to keep alive — skip the passport
+        // auth-update poll.
+        if (isEnabledFeature(Feature.AuthUpdateWithTimeout) && !isAnonymousMode()) {
             this.setAuthUpdateTimeout();
         }
 
@@ -280,14 +283,17 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
                         history={history}
                     />
                     <AccessRightsUrlOpen history={history} />
-                    <Header
-                        entryDialoguesRef={this.entryDialoguesRef}
-                        settingsDrawerApiRef={this.settingsDrawerApiRef}
-                        handlerEditClick={this.handlerEditClick}
-                        history={history}
-                        location={location}
-                        isEditModeLoading={this.state.isEditModeLoading}
-                    />
+                    {/* Anonymous public or embedded viewers get no edit toolbar — chromeless render. */}
+                    {!isAnonymousMode() && (
+                        <Header
+                            entryDialoguesRef={this.entryDialoguesRef}
+                            settingsDrawerApiRef={this.settingsDrawerApiRef}
+                            handlerEditClick={this.handlerEditClick}
+                            history={history}
+                            location={location}
+                            isEditModeLoading={this.state.isEditModeLoading}
+                        />
+                    )}
                     <DashBody
                         onRetry={this.handleRetry}
                         handlerEditClick={this.handlerEditClick}
@@ -295,7 +301,8 @@ class DashComponent extends React.PureComponent<DashProps, DashState> {
                         onPasteItem={this.onPasteItem}
                         globalParams={getUrlGlobalParams(location.search, dashGlobalDefaultParams)}
                         dashkitSettings={this.getDashkitSettings(settings)}
-                        onlyView={DL.IS_MOBILE}
+                        onlyView={DL.IS_MOBILE || isAnonymousMode()}
+                        isPublicMode={isAnonymousMode()}
                     />
                     <Dialogs settingsDrawerApiRef={this.settingsDrawerApiRef} />
                 </DashHotkeys>

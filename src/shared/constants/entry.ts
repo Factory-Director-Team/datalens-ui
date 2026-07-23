@@ -12,6 +12,17 @@ export const PREVIEW_ROUTE = 'preview';
 export const EDITOR_ROUTE = 'editor';
 export const DATASETS_ROUTE = 'datasets';
 export const CONNECTIONS_ROUTE = 'connections';
+// Anonymous public-link page: /public/:entryId (ticket 03).
+export const PUBLIC_ROUTE = 'public';
+
+// US private endpoint that returns ONLY entries flagged public (server→US, ADR 0002). Distinct from
+// PUBLIC_ROUTE above, which is the client-facing page; this is the storage API path both the BFF SDK
+// and the charts-engine storage provider call.
+export const US_PUBLIC_ENTRIES_API_PATH = '/private/public-entries';
+
+// US private endpoint that resolves an Embed token to its (private) object (server→US, ADR 0002/0003).
+// The Embed token in the `x-dl-embed-token` header is the capability; US verifies its signature.
+export const US_EMBEDDED_ENTRY_API_PATH = '/private/embedded-entry';
 
 export const ENTRY_ROUTES = [
     NAVIGATION_ROUTE,
@@ -24,6 +35,7 @@ export const ENTRY_ROUTES = [
     EDITOR_ROUTE,
     DATASETS_ROUTE,
     CONNECTIONS_ROUTE,
+    PUBLIC_ROUTE,
 ];
 
 export const ENTRY_ID_LENGTH = 13;

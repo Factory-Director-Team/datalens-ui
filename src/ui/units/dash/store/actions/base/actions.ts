@@ -9,6 +9,7 @@ import {closeDialog as closeDialogConfirm, openDialogConfirm} from 'store/action
 import type {DatalensGlobalState} from 'ui';
 import {MarkdownProvider, URL_QUERY, Utils} from 'ui';
 import type {ConnectionsReduxDispatch} from 'ui/units/connections/store';
+import {isEmbeddedEntry, isPublicMode} from 'ui/utils/embedded';
 import type {ManualError} from 'ui/utils/errors/manual';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 import {getLoginOrIdFromLockedError, isEntryIsLockedError} from 'utils/errors/errorByCode';
@@ -244,7 +245,10 @@ export const load = ({
 
             const {extractEntryId} = registry.common.functions.getAll();
 
-            const entryId = extractEntryId(pathname);
+            // On an embedded dashboard the URL is just /embed; the object id was resolved server-side
+            // from the signed token and handed to the client as DL.EMBED_ENTRY_ID (ticket 05).
+            const isEmbedded = isEmbeddedEntry();
+            const entryId = isEmbedded ? DL.EMBED_ENTRY_ID : extractEntryId(pathname);
             const isFakeEntry =
                 !entryId && (pathname === '/dashboards/new' || pathname.startsWith('/workbooks/'));
 
@@ -275,13 +279,23 @@ export const load = ({
                 readDashParams.revId = revId;
             }
 
+            // On an anonymous page there is no session: load the dash config via an auth-disabled route
+            // (US public-read for a public link, ticket 03; or the signed Embed token for an embed,
+            // ticket 05) and skip the saved hash-state read, which requires auth. In-session
+            // selectors/filters still work; only shared saved states are unavailable.
+            const isPublic = isPublicMode();
+
             const [entry, hashData] = await Promise.all([
                 // TODO Refactor old api schema
-                (sdk.charts as any).readDash({
-                    id: entryId,
-                    params: readDashParams,
-                }),
-                hash
+                isEmbedded
+                    ? (sdk.charts as any).readDashEmbed({embedToken: DL.EMBED_TOKEN})
+                    : isPublic
+                      ? (sdk.charts as any).readDashPublic({id: entryId})
+                      : (sdk.charts as any).readDash({
+                            id: entryId,
+                            params: readDashParams,
+                        }),
+                hash && !isPublic && !isEmbedded
                     ? getSdk()
                           .sdk.us.getDashState({
                               entryId,

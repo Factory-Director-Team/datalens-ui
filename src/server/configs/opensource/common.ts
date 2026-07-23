@@ -228,6 +228,7 @@ export default {
     // auth
     isAuthEnabled: isTrueArg(process.env.AUTH_ENABLED),
     authTokenPublicKey: getEnvCert(process.env.AUTH_TOKEN_PUBLIC_KEY),
+    authTokenPrivateKey: getEnvCert(process.env.AUTH_TOKEN_PRIVATE_KEY),
     authManageLocalUsersDisabled: isTrueArg(process.env.AUTH_MANAGE_LOCAL_USERS_DISABLED),
     authSignupDisabled: isTrueArg(process.env.AUTH_SIGNUP_DISABLED),
     authCookieName: process.env.AUTH_COOKIE_NAME,

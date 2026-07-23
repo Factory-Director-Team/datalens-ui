@@ -7,6 +7,7 @@ import {getAuthArgs} from '../../../shared/schema/gateway-utils';
 import {appEnv, isApiMode, isChartsMode, isDatalensMode, isFullMode} from '../../app-env';
 import {getAuthRoutes} from '../../components/auth/routes';
 import type {ChartsEngine} from '../../components/charts-engine';
+import {embedController, publicController, publicDashController} from '../../controllers';
 import {ping} from '../../controllers/ping';
 import {workbooksTransferController} from '../../controllers/workbook-transfer';
 import {getConnectorIconsMiddleware} from '../../middlewares';
@@ -139,6 +140,30 @@ function getDataLensRoutes({
 
         getWizardAll: getConfiguredRoute('dl-main', {...ui, route: 'GET /wizard/*'}),
         getPreview: getConfiguredRoute('dl-main', {...ui, route: 'GET /preview*'}),
+        // Anonymous public-link page for a single chart or dashboard. Auth is disabled so viewers
+        // need no login; US serves the underlying data only if the entry is flagged public (ADR 0002).
+        getPublicEntry: {
+            ...ui,
+            route: 'GET /public/:entryId',
+            handler: publicController,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous dashboard-config load for a public link. Resolves the dash via US public-read
+        // (master token, only-public), so it returns a config only for a public dashboard (ticket 03).
+        getPublicDash: {
+            ...server,
+            route: 'GET /api/public/dash/:id',
+            handler: publicDashController,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous Embed page (variant B): the iframe src. Auth is disabled so it renders with no
+        // login; the signed Embed token in the URL is the capability, verified in US (ADR 0003).
+        getEmbed: {
+            ...ui,
+            route: 'GET /embed',
+            handler: embedController,
+            authPolicy: AuthPolicy.disabled,
+        },
         getWorkbooks: getConfiguredRoute('dl-main', {...ui, route: 'GET /workbooks*'}),
 
         postDeleteLock: getConfiguredRoute('api.deleteLock', {
@@ -205,6 +230,34 @@ function getChartsRoutes({
             afterAuth,
             route: 'POST /api/run',
             handler: chartsEngine.controllers.run,
+        },
+        // Anonymous run for a public link (no login). Config is resolved via the US public-read
+        // endpoint, which returns only public entries (ADR 0002).
+        postApiPublicRun: {
+            beforeAuth,
+            afterAuth,
+            route: 'POST /api/public/run',
+            handler: chartsEngine.controllers.publicRun,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous run for an Embed (no login). The Embed token in the x-dl-embed-token header is
+        // validated in US; locked/open parameters are enforced here in the embeds controller (ticket 04).
+        postApiEmbedRun: {
+            beforeAuth,
+            afterAuth,
+            route: 'POST /api/embed/run',
+            handler: chartsEngine.controllers.embeds,
+            authPolicy: AuthPolicy.disabled,
+        },
+        // Anonymous dashboard-config load for an Embed. Resolves the dash from the signed Embed token
+        // (no id — the token identifies the object); the object stays private and is served only for a
+        // valid token (ADR 0003 / ticket 05). Mirrors getPublicDash for the embed path.
+        getApiEmbedDash: {
+            beforeAuth,
+            afterAuth,
+            route: 'GET /api/embed/dash',
+            handler: chartsEngine.controllers.embeddedEntry,
+            authPolicy: AuthPolicy.disabled,
         },
         postApiExport: {
             beforeAuth,

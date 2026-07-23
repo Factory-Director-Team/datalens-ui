@@ -29,16 +29,32 @@ type LoadChartConfigArgs = {
     id?: string;
     key?: string;
     workbookId?: string;
+    public?: boolean;
+    // Id of the public dashboard this chart is a dependency of; forwarded to US so a non-public
+    // dependent chart can be authorized on the public-read path (ticket 03).
+    publicDashId?: string;
 };
 
 export async function resolveChartConfig(args: LoadChartConfigArgs) {
-    const {params, id, key, workbookId, request, extraSettings, subrequestHeaders} = args;
+    const {
+        params,
+        id,
+        key,
+        workbookId,
+        request,
+        extraSettings,
+        subrequestHeaders,
+        public: isPublic,
+        publicDashId,
+    } = args;
     const {ctx} = request;
 
     const configResolveArgs: ResolveConfigProps = {
         unreleased: shouldUseUnreleasedConfig({request, params}),
         key,
         id,
+        public: isPublic,
+        publicDashId,
         workbookId,
         headers: {
             ...subrequestHeaders,

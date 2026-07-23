@@ -54,6 +54,8 @@ import type {
     MoveSharedEntryArgs,
     RenameEntryArgs,
     RenameEntryResponse,
+    SwitchEntryPublicationStatusArgs,
+    SwitchEntryPublicationStatusResponse,
     SwitchPublicationStatusArgs,
     SwitchPublicationStatusResponse,
 } from '../../types';
@@ -230,6 +232,19 @@ export const entriesActions = {
         path: () => `${PRIVATE_PATH_PREFIX}/entries/switchPublicationStatus`,
         params: ({entries, mainEntry}, headers) => ({
             body: {entries, mainEntry},
+            headers,
+        }),
+    }),
+    // Publish / unpublish a single chart or dashboard (sets entry.public). Backs the Public link mode
+    // of the Share dialog; US enforces workbook edit rights and derives the workbook from the entry.
+    switchEntryPublicationStatus: createAction<
+        SwitchEntryPublicationStatusResponse,
+        SwitchEntryPublicationStatusArgs
+    >({
+        method: 'POST',
+        path: ({entryId}) => `${PATH_PREFIX}/entries/${filterUrlFragment(entryId)}/publication`,
+        params: ({publish}, headers) => ({
+            body: {publish},
             headers,
         }),
     }),

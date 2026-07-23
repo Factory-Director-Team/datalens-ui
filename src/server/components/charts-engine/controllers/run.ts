@@ -18,6 +18,8 @@ type RunControllerExtraSettings = {
     extraAllowedHeaders?: string[];
     includeServicePlan?: boolean;
     includeTenantFeatures?: boolean;
+    // Serves an anonymous public link: config is resolved via the US public-read endpoint.
+    isPublic?: boolean;
 };
 
 export const runController = (
@@ -34,7 +36,7 @@ export const runController = (
 
         const hrStart = process.hrtime();
 
-        const {id, workbookId, expectedType = null, config: chartConfig} = req.body;
+        const {id, workbookId, expectedType = null, config: chartConfig, publicDashId} = req.body;
 
         let {key, params} = req.body;
 
@@ -78,6 +80,10 @@ export const runController = (
                 key,
                 workbookId,
                 extraSettings,
+                public: extraSettings?.isPublic,
+                // Only honoured on the public path; lets a dependent chart of a public dashboard be
+                // authorized by US via the dashboard's links (ticket 03).
+                publicDashId: extraSettings?.isPublic ? publicDashId : undefined,
             });
         }
 
@@ -159,6 +165,7 @@ export const runController = (
                 editMode: Boolean(res.locals.editMode),
                 login: res.locals.login ?? null,
                 iamToken: res.locals.iamToken ?? null,
+                isPublic: Boolean(extraSettings?.isPublic),
             };
 
             const runnerHandlerResult = await runnerFound.handler(ctx, {

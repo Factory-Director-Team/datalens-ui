@@ -1,4 +1,5 @@
 import {exampleFunction} from 'ui/registry/functions/example-function';
+import {getSecureEmbeddingToken} from 'ui/registry/functions/get-secure-embedding-token';
 import {EXAMPLE_FUNCTION} from 'ui/registry/units/common/constants/functions';
 
 import {getChartkitType} from '../../../libs/DatalensChartkit/ChartKit/helpers/chartkit-adapter';
@@ -20,5 +21,6 @@ export const registerChartPlugins = () => {
         getChartkitMenuByType,
         getChartkitPlugins,
         getChartkitType,
+        getSecureEmbeddingToken,
     });
 };

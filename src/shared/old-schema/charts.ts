@@ -1,6 +1,12 @@
 import type {IncomingHttpHeaders} from 'http';
 
-import {CHARTS_API_BASE_URL, DASH_API_BASE_URL} from '../constants';
+import {
+    CHARTS_API_BASE_URL,
+    DASH_API_BASE_URL,
+    DL_EMBED_TOKEN_HEADER,
+    EMBED_DASH_API_BASE_URL,
+    PUBLIC_DASH_API_BASE_URL,
+} from '../constants';
 import type {Endpoints} from '../endpoints';
 import {filterUrlFragment} from '../schema/utils';
 import type {
@@ -151,6 +157,40 @@ const CHARTS_API_SCHEMA = {
         url: `${endpoints.charts}${DASH_API_BASE_URL}/${filterUrlFragment(id)}`,
         headers,
         params,
+    }),
+    // Anonymous dashboard-config load for a public link. Hits the auth-disabled public route, which
+    // resolves the dash via US public-read (ticket 03).
+    readDashPublic: (
+        headers: IncomingHttpHeaders,
+        endpoints: UiEndpoints,
+        {
+            id,
+        }: {
+            id: string;
+        },
+    ) => ({
+        method: 'get',
+        url: `${endpoints.charts}${PUBLIC_DASH_API_BASE_URL}/${filterUrlFragment(id)}`,
+        headers,
+    }),
+    // Anonymous dashboard-config load for an Embed. Hits the auth-disabled embed route, which resolves
+    // the dash from the signed Embed token carried in the x-dl-embed-token header — the token identifies
+    // the object, so no id is passed (ticket 05).
+    readDashEmbed: (
+        headers: IncomingHttpHeaders,
+        endpoints: UiEndpoints,
+        {
+            embedToken,
+        }: {
+            embedToken: string;
+        },
+    ) => ({
+        method: 'get',
+        url: `${endpoints.charts}${EMBED_DASH_API_BASE_URL}`,
+        headers: {
+            ...headers,
+            [DL_EMBED_TOKEN_HEADER]: embedToken,
+        },
     }),
     updateDash: (
         headers: IncomingHttpHeaders,

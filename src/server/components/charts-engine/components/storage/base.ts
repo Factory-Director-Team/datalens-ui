@@ -12,6 +12,11 @@ const DEFAULT_PRELOAD_FETCHING_INTERVAL = 120e3;
 
 export type ResolveConfigProps = {
     id?: string;
+    // When true, the entry is fetched via the US public-read endpoint (anonymous public link).
+    public?: boolean;
+    // Id of the public dashboard this chart belongs to; lets US authorize a non-public dependent
+    // chart on the public-read path (ticket 03).
+    publicDashId?: string;
     key: string;
     headers: Request['headers'];
     unreleased?: boolean;
@@ -178,6 +183,14 @@ export class BaseStorage {
                 ...storageRetrieveArgs,
             });
             id = `embed-${params.embedId}`;
+        } else if (params.id && params.public) {
+            retrieve = this.provider.retrieveByIdPublic(ctx, {
+                id: params.id,
+                workbookId,
+                publicDashId: params.publicDashId,
+                ...storageRetrieveArgs,
+            });
+            id = params.id;
         } else if (params.id) {
             retrieve = this.provider.retrieveById(ctx, {
                 id: params.id,

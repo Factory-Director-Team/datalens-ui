@@ -16,6 +16,10 @@ export type RunnerLocals = {
     editMode: boolean;
     login: string | null;
     iamToken: string | null;
+    // Set on the anonymous public-link run path (POST /api/public/run); the embed path is detected
+    // separately via the x-dl-embed-token header. Both attach an anonymous service token to the
+    // data-api query (see getSerializableProcessorParams).
+    isPublic?: boolean;
 };
 
 export type Runner = {

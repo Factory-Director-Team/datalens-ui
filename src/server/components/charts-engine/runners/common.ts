@@ -19,6 +19,7 @@ import {getDefaultColorPaletteId, getDuration} from '../components/utils';
 import type {ChartsEngine} from '../index';
 import type {ChartStorageType} from '../types';
 
+import {getAnonymousDataApiToken} from './anonymous-data-token';
 import {prepareErrorForLogger} from './utils';
 
 import type {RunnerHandlerResult, RunnerLocals} from '.';
@@ -188,11 +189,18 @@ export const getSerializableProcessorParams = ({
 
     const isEmbed = req.headers[DL_EMBED_TOKEN_HEADER] !== undefined;
 
-    const authParams = ctx.config.isAuthEnabled
-        ? {
-              accessToken: req.ctx.get('user')?.accessToken,
-          }
-        : undefined;
+    // On an anonymous public-link/embed data run there is no authenticated user, so under
+    // AUTH_TYPE=NATIVE data-api would reject the query with 401. Substitute a minted anonymous
+    // service token so data-api accepts it; the authenticated /api/run path keeps the real user's
+    // token untouched. When auth is disabled (AUTH_TYPE=NONE) data-api needs no token.
+    const userAccessToken = req.ctx.get('user')?.accessToken;
+    const accessToken =
+        userAccessToken ??
+        (ctx.config.isAuthEnabled && (isEmbed || locals.isPublic)
+            ? getAnonymousDataApiToken(ctx)
+            : undefined);
+
+    const authParams = ctx.config.isAuthEnabled ? {accessToken} : undefined;
 
     const originalReqHeaders = {
         xRealIP: req.headers['x-real-ip'],
