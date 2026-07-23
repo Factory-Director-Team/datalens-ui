@@ -95,6 +95,9 @@ export interface SharedAppConfig {
     // auth
     isAuthEnabled: boolean;
     authTokenPublicKey?: string;
+    // Private half of the platform auth keypair (public half is authTokenPublicKey). Present only when
+    // the operator opts the BFF into signing the anonymous public-link/embed data-api token (findings/01).
+    authTokenPrivateKey?: string;
     authManageLocalUsersDisabled?: boolean;
     authSignupDisabled?: boolean;
     authCookieName?: string;

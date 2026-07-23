@@ -165,6 +165,7 @@ export const runController = (
                 editMode: Boolean(res.locals.editMode),
                 login: res.locals.login ?? null,
                 iamToken: res.locals.iamToken ?? null,
+                isPublic: Boolean(extraSettings?.isPublic),
             };
 
             const runnerHandlerResult = await runnerFound.handler(ctx, {

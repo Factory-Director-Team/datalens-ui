@@ -17,10 +17,10 @@ import datalensTest from '../../../utils/playwright/globalTestDefinition';
 //   1. The embedded-dashboard path (US embedded-entry token validation + dependent-entry authorization
 //      via links + BFF /api/embed/dash + /api/embed/run) is only exercisable against the full
 //      docker-compose stack, which is not wired here yet.
-//   2. Rendering actual chart DATA anonymously additionally depends on the data-api identity work (see
-//      .scratch/public-sharing-embedding/findings/01-data-api-anonymous-identity.md); under the default
-//      AUTH_TYPE=NATIVE the dependent-chart queries 401 until that lands. Config resolution and token
-//      validation still hold.
+//   2. Rendering actual chart DATA anonymously is now unblocked: the data-api identity work has landed
+//      (.scratch/public-sharing-embedding/findings/01-data-api-anonymous-identity.md) — the BFF attaches a
+//      minted service JWT so the dependent-chart queries pass data-api under the default AUTH_TYPE=NATIVE.
+//      Exercising it end-to-end still needs the docker stack with AUTH_TOKEN_PRIVATE_KEY set.
 //   3. Per the spec's testing caveat, the opensource-e2e environment may run with auth fully disabled;
 //      there "anonymous vs. logged-in" is indistinguishable, so the load-bearing authorization assertions
 //      (a dashboard embed resolves its dependent charts, a non-dependency does not, a forged/deleted token

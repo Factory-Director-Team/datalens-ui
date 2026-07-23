@@ -13,9 +13,10 @@ import datalensTest from '../../../utils/playwright/globalTestDefinition';
 // PENDING: kept skipped until the opensource-e2e stack proves out.
 //   1. The public dashboard path (US public-read + dependent-chart authorization via links + BFF
 //      /api/public/dash + /api/public/run) is only exercisable against the full docker-compose stack.
-//   2. Rendering actual chart DATA anonymously additionally depends on the data-api identity work sized
-//      for later tickets (see .scratch/public-sharing-embedding/findings/01-data-api-anonymous-identity.md);
-//      under the default AUTH_TYPE=NATIVE the dependent-chart queries 401 until that lands.
+//   2. Rendering actual chart DATA anonymously is now unblocked: the data-api identity work has landed
+//      (see .scratch/public-sharing-embedding/findings/01-data-api-anonymous-identity.md) — the BFF attaches
+//      a minted service JWT so the dependent-chart queries pass data-api under the default AUTH_TYPE=NATIVE.
+//      Exercising it end-to-end still needs the docker stack.
 //   The load-bearing authorization assertions (a public dashboard's deps resolve, a non-public dash's do
 //   not, a non-dependency does not) are covered now by the US int test get-public-dashboard-deps.test.ts.
 datalensTest.describe('Dashboards — Public link (tracer)', () => {

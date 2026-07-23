@@ -14,9 +14,9 @@ import datalensTest from '../../../utils/playwright/globalTestDefinition';
 // PENDING: kept skipped until the opensource-e2e stack proves out.
 //   1. The embed-run data path (US embedded-entry token validation + BFF /api/embed/run) is only
 //      exercisable against the full docker-compose stack, which is not wired here yet.
-//   2. Same data-api identity gap as the public tracer: under the default AUTH_TYPE=NATIVE the anonymous
-//      run cannot carry a data-api JWT, so data does not render anonymously without the cross-cutting
-//      service-JWT work (findings/01). Config resolution and token validation still hold.
+//   2. The data-api identity path is now wired (findings/01 resolved): on the anonymous embed run the BFF
+//      attaches a minted service JWT so data-api accepts the query under the default AUTH_TYPE=NATIVE.
+//      Exercising it end-to-end still needs the docker stack with AUTH_TOKEN_PRIVATE_KEY set.
 //   3. Per the spec's testing caveat, the opensource-e2e environment may run with auth fully disabled;
 //      there "anonymous vs. logged-in" is indistinguishable, so the load-bearing assertions (token
 //      validation, parameter filtering, object privacy) rest on the US integration seam (embedded-entry
