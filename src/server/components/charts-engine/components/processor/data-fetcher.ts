@@ -60,6 +60,13 @@ const {
 const ALLOWED_HTTP_METHODS = ['GET', 'POST'];
 const ALLOWED_REQUEST_FORMATS = ['json', 'form'];
 
+// The sources an embed run is rerouted to, per plain source, in installations that serve embed data
+// through dedicated endpoints.
+export const EMBED_SOURCE_NAME_BY_SOURCE: Record<string, string> = {
+    bi_datasets: 'bi_datasets_embed',
+    bi_connections: 'bi_connections_embed',
+};
+
 type ChartkitSourceDecription = {title?: string};
 type ChartkitSource = {
     description?: ChartkitSourceDecription;
@@ -381,12 +388,15 @@ export class DataFetcher {
     }) {
         let sourceName = DataFetcher.getSourceName(sourcePath);
 
-        // Temporary hack for embed endpoints
-        if (isEmbed && sourceName === 'bi_datasets') {
-            sourceName = 'bi_datasets_embed';
-        }
-        if (isEmbed && sourceName === 'bi_connections') {
-            sourceName = 'bi_connections_embed';
+        // Temporary hack for embed endpoints, taken only where the installation gives the embed
+        // source an endpoint. The opensource one declares none: there an embed run queries the same
+        // data-api as an authorized one, with the anonymous token the runner mints. Unguarded, the
+        // endpoint resolves to undefined and the request URI below is built as "undefined/…" —
+        // rejected as ERR_INVALID_URL before any request goes out, which showed up as a data
+        // fetching error on every chart inside an Embed.
+        const embedSourceName = isEmbed ? EMBED_SOURCE_NAME_BY_SOURCE[sourceName] : undefined;
+        if (embedSourceName && sourcesConfig[embedSourceName]?.dataEndpoint) {
+            sourceName = embedSourceName;
         }
 
         const resultSourceType = Object.keys(sourcesConfig).find((sourceType) => {

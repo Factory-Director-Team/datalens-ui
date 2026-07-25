@@ -106,26 +106,10 @@ export default {
                     },
                 },
             },
-            bi_datasets_embed: {
-                dataEndpoint: sources.bi_datasets_embed,
-                passedCredentials: {},
-                description: {
-                    title: {
-                        ru: 'DataLens BI Datasets Embed',
-                        en: 'DataLens BI Datasets Embed',
-                    },
-                },
-            },
-            bi_connections_embed: {
-                dataEndpoint: sources.bi_connections_embed,
-                passedCredentials: {},
-                description: {
-                    title: {
-                        ru: 'DataLens BI Connections Embed',
-                        en: 'DataLens BI Connections Embed',
-                    },
-                },
-            },
+            // No bi_datasets_embed / bi_connections_embed: this installation has no separate embed
+            // data endpoints (see DataFetcher.getSourceConfig). Declared without one they resolved
+            // to an undefined endpoint here and reached the client through getChartKitSources as
+            // sources that promise embed data nothing serves.
             us_color_palettes: {
                 description: {
                     title: {
