@@ -7,9 +7,9 @@ import {DashSchemeConverter, EntryScope, Feature} from 'shared';
 import type {GetEntryArgs} from 'shared/schema';
 import {closeDialog as closeDialogConfirm, openDialogConfirm} from 'store/actions/dialog';
 import type {DatalensGlobalState} from 'ui';
-import {MarkdownProvider, URL_QUERY, Utils} from 'ui';
+import {MarkdownProvider, URL_QUERY} from 'ui';
 import type {ConnectionsReduxDispatch} from 'ui/units/connections/store';
-import {isEmbeddedEntry, isPublicMode} from 'ui/utils/embedded';
+import {isAnonymousMode, isEmbeddedEntry, isPublicMode} from 'ui/utils/embedded';
 import type {ManualError} from 'ui/utils/errors/manual';
 import {isEnabledFeature} from 'ui/utils/isEnabledFeature';
 import {getLoginOrIdFromLockedError, isEntryIsLockedError} from 'utils/errors/errorByCode';
@@ -43,7 +43,7 @@ import {
     removeParamAndUpdate,
 } from '../helpers';
 
-import {getGlobalStatesForInactiveTabs} from './helpers';
+import {getEntryStateFields, getGlobalStatesForInactiveTabs} from './helpers';
 
 const i18n = I18n.keyset('dash.store.view');
 
@@ -354,8 +354,13 @@ export const load = ({
                 };
             }
 
+            // The anonymous read serves a reduced entry (the Embed one carries no key, permissions,
+            // revision or annotation) — resolve what the page reports for those before anything reads them.
+            const entryStateFields = getEntryStateFields({entry, isAnonymous: isAnonymousMode()});
+
             const isEmptyDash = data.tabs.length === 1 && !data.tabs[0].items.length;
-            const hasEditPermissions = entry?.permissions?.admin || entry?.permissions?.edit;
+            const {permissions} = entryStateFields;
+            const hasEditPermissions = permissions?.admin || permissions?.edit;
             const isOpenedActualRevision = !revId;
             const isAvailableEditMode = !isEnabledFeature(Feature.ReadOnlyMode) && !DL.IS_MOBILE;
 
@@ -382,8 +387,7 @@ export const load = ({
             dispatch({
                 type: SET_STATE,
                 payload: {
-                    permissions: entry.permissions,
-                    navigationPath: Utils.getNavigationPathFromKey(entry.key),
+                    ...entryStateFields,
                     mode,
                     entry,
                     hashStates,
@@ -391,10 +395,8 @@ export const load = ({
                     convertedEntryData,
                     tabId,
                     stateHashId: hash,
-                    currentRevId: entry.revId,
                     widgetsCurrentTab,
                     openInfoOnLoad: searchParams.get(URL_QUERY.OPEN_DASH_INFO) === '1',
-                    annotation: entry.annotation,
                 },
             });
 

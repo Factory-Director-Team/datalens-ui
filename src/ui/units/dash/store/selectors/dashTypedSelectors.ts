@@ -27,8 +27,10 @@ export const selectDashError = (state: DatalensGlobalState) => state.dash.error;
 export const selectEntryId = (state: DatalensGlobalState) =>
     state.dash.entry ? state.dash.entry.entryId : null;
 
+// The entry an anonymous page is served (public link / Embed) carries no key, so there is no title to
+// derive from it — report none rather than throwing on the way.
 export const selectEntryTitle = (state: DatalensGlobalState) =>
-    state.dash.entry ? state.dash.entry.key.match(/[^/]*$/)?.toString() : null;
+    state.dash.entry?.key?.match(/[^/]*$/)?.toString() ?? null;
 
 export const selectEntryData = (state: DatalensGlobalState) =>
     state.dash.convertedEntryData || state.dash.entry?.data || null;

@@ -9,7 +9,13 @@ import _mapKeys from 'lodash/mapKeys';
 import _snakeCase from 'lodash/snakeCase';
 import moment from 'moment';
 import type {StringParams} from 'shared';
-import {ENABLE, SHARED_URL_OPTIONS, SUPERUSER_SWITCH_MODE_COOKIE_NAME, SYSTEM_THEME} from 'shared';
+import {
+    ENABLE,
+    SHARED_URL_OPTIONS,
+    SUPERUSER_SWITCH_MODE_COOKIE_NAME,
+    SYSTEM_THEME,
+    getNavigationPathByKey,
+} from 'shared';
 
 import {DL, URL_OPTIONS} from '../constants';
 import {getSdk} from '../libs/schematic-sdk';
@@ -52,9 +58,8 @@ export default class Utils {
         return path === '/' ? entryName : path + entryName;
     }
 
-    static getNavigationPathFromKey(key: string) {
-        // an empty string is considered a valid value, but it does not pass Boolean verification, so we replace it with '/'
-        return key.replace(/\/?[^/]*$/g, '') || '/';
+    static getNavigationPathFromKey(key: string | null | undefined) {
+        return getNavigationPathByKey({key});
     }
 
     static getCookie(name: string) {

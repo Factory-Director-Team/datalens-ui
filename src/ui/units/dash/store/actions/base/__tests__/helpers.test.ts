@@ -14,7 +14,7 @@ import type {
 } from 'shared';
 import {DASHKIT_STATE_VERSION} from 'ui/units/dash/modules/constants';
 
-import {getGlobalStatesForInactiveTabs} from '../helpers';
+import {getEntryStateFields, getGlobalStatesForInactiveTabs} from '../helpers';
 
 jest.mock('ui/utils/isEnabledFeature', () => ({
     isEnabledFeature: jest.fn(),
@@ -94,6 +94,57 @@ describe('base/helpers.ts', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    describe('getEntryStateFields', () => {
+        const authenticatedEntry = {
+            entryId: 'h7v7bbvvv7rk0',
+            key: 'Users/john/reports/Sales',
+            revId: 'rev-42',
+            annotation: {description: 'quarterly numbers'},
+            permissions: {execute: true, read: true, edit: true, admin: true},
+        };
+
+        // The Embed read serves entryId, scope and data and nothing else.
+        const embedEntry = {entryId: 'h7v7bbvvv7rk0'};
+
+        it('should derive the fields from the entry envelope when authenticated', () => {
+            expect(getEntryStateFields({entry: authenticatedEntry, isAnonymous: false})).toEqual({
+                navigationPath: 'Users/john/reports',
+                permissions: {execute: true, read: true, edit: true, admin: true},
+                annotation: {description: 'quarterly numbers'},
+                currentRevId: 'rev-42',
+            });
+        });
+
+        it('should report the fields an Embed entry omits rather than leave them undefined', () => {
+            expect(getEntryStateFields({entry: embedEntry, isAnonymous: true})).toEqual({
+                navigationPath: null,
+                permissions: {execute: true, read: true, edit: false, admin: false},
+                annotation: null,
+                currentRevId: null,
+            });
+        });
+
+        // A public link is anonymous too, but its read carries the description — it stays shown.
+        it('should keep a description the anonymous read did carry', () => {
+            const {annotation} = getEntryStateFields({
+                entry: {entryId: 'h7v7bbvvv7rk0', annotation: {description: 'quarterly numbers'}},
+                isAnonymous: true,
+            });
+
+            expect(annotation).toEqual({description: 'quarterly numbers'});
+        });
+
+        // Nothing an anonymous read returns may grant editing: there is no session behind the request.
+        it('should never report edit rights on an anonymous page', () => {
+            const {permissions} = getEntryStateFields({
+                entry: authenticatedEntry,
+                isAnonymous: true,
+            });
+
+            expect(permissions).toEqual({execute: true, read: true, edit: false, admin: false});
+        });
     });
 
     describe('getGlobalStatesForInactiveTabs', () => {
