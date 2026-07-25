@@ -4,8 +4,7 @@ import axiosRetry, {isRetryableError} from 'axios-retry';
 import isNumber from 'lodash/isNumber';
 import {showReadOnlyToast} from 'ui/utils/readOnly';
 
-import {DL} from '../../../../constants/common';
-import {refreshAuthToken} from '../../../auth/refreshToken';
+import {isAuthTokenRefreshEnabled, refreshAuthToken} from '../../../auth/refreshToken';
 import {initBeforeRequestInterceptor} from '../../../axios/interceptors';
 
 import type {ConcurrencyManagerInstance} from './axiosConcurrency';
@@ -62,7 +61,7 @@ client.interceptors.response.use(
     },
 );
 
-if (DL.AUTH_ENABLED) {
+if (isAuthTokenRefreshEnabled()) {
     initBeforeRequestInterceptor(client, refreshAuthToken);
 }
 

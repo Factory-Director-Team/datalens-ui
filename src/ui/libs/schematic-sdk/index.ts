@@ -17,7 +17,7 @@ import type {WithRequired, authSchema, schema} from '../../../shared';
 import {DL} from '../../constants';
 import {registry} from '../../registry';
 import Utils from '../../utils';
-import {refreshAuthToken} from '../auth/refreshToken';
+import {isAuthTokenRefreshEnabled, refreshAuthToken} from '../auth/refreshToken';
 
 import {emitCancelRequest, initBeforeRequestDecorator} from './decorator';
 import type {OperationError, SdkError} from './parse-error';
@@ -52,7 +52,7 @@ const sdkConfig: SdkConfig = {
             },
         };
     },
-    decorator: DL.AUTH_ENABLED
+    decorator: isAuthTokenRefreshEnabled()
         ? initBeforeRequestDecorator(({scope}) => {
               return scope === 'auth' ? Promise.resolve() : refreshAuthToken();
           })

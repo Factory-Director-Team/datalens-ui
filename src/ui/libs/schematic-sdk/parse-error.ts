@@ -5,6 +5,7 @@ import _ from 'lodash';
 import type {Action, Dispatch} from 'redux';
 import {ErrorCode, REQUEST_ID_HEADER, TRACE_ID_HEADER} from 'shared';
 import {openDialog} from 'store/actions/dialog';
+import {isAnonymousMode} from 'ui/utils/embedded';
 import {showReadOnlyToast} from 'ui/utils/readOnly';
 
 import {DL} from '../../constants';
@@ -85,10 +86,14 @@ export const handleRequestError: SdkConfig['handleRequestError'] = (errorRespons
         };
     }
 
+    // The dialog says "you performed logout in another tab" and its only action reloads — which makes
+    // sense solely to a viewer who had a session. An anonymous page never had one, so there the dialog
+    // is an inescapable overlay whose Refresh just re-triggers whatever produced the code.
     if (
         ([ErrorCode.AuthNeedReset, ErrorCode.NeedReset] as string[]).includes(parsedError.code) &&
         dispatch &&
-        !needResetDialogShown
+        !needResetDialogShown &&
+        !isAnonymousMode()
     ) {
         needResetDialogShown = true;
 

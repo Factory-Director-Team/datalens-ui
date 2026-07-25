@@ -2,8 +2,7 @@ import axios from 'axios';
 import axiosRetry from 'axios-retry';
 import {showReadOnlyToast} from 'ui/utils/readOnly';
 
-import {DL} from '../../constants/common';
-import {refreshAuthToken} from '../auth/refreshToken';
+import {isAuthTokenRefreshEnabled, refreshAuthToken} from '../auth/refreshToken';
 
 import {initBeforeRequestInterceptor} from './interceptors';
 
@@ -46,7 +45,7 @@ axiosRetry(client, {
         axiosRetry.isNetworkError(error) || axiosRetry.isRetryableError(error),
 });
 
-if (DL.AUTH_ENABLED) {
+if (isAuthTokenRefreshEnabled()) {
     initBeforeRequestInterceptor(client, refreshAuthToken);
 }
 
