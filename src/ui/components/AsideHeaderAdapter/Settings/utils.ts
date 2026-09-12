@@ -9,18 +9,31 @@ import {HighcontrastValue} from './types';
 const i18n = I18n.keyset('component.aside-header-settings.view');
 
 export const getLocalTheme = (): {theme: string; themeSettings: ThemeSettings} => {
-    const rawUserSettings = localStorage.getItem('userSettings');
+    // Called while the store module is evaluated, before React mounts: a browser that denies site
+    // data throws on localStorage access instead of returning null, and an uncaught throw here
+    // blanks the whole page — including the sign-in form.
+    let rawUserSettings: string | null = null;
+
+    try {
+        rawUserSettings = localStorage.getItem('userSettings');
+    } catch (err) {
+        return DEFAULT_THEME_CONFIG;
+    }
 
     if (!rawUserSettings) {
         return DEFAULT_THEME_CONFIG;
     }
 
-    const parsedUserSettings: Partial<DLUserSettings> = JSON.parse(rawUserSettings);
+    try {
+        const parsedUserSettings: Partial<DLUserSettings> = JSON.parse(rawUserSettings);
 
-    return {
-        theme: parsedUserSettings.theme || DEFAULT_THEME_CONFIG.theme,
-        themeSettings: parsedUserSettings.themeSettings || DEFAULT_THEME_CONFIG.themeSettings,
-    };
+        return {
+            theme: parsedUserSettings.theme || DEFAULT_THEME_CONFIG.theme,
+            themeSettings: parsedUserSettings.themeSettings || DEFAULT_THEME_CONFIG.themeSettings,
+        };
+    } catch (err) {
+        return DEFAULT_THEME_CONFIG;
+    }
 };
 
 export const isHcEnabled = (settings?: ThemeSettings) => {
