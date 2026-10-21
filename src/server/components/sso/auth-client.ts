@@ -16,14 +16,6 @@ export class SsoError extends Error {
     }
 }
 
-export interface AuthSession {
-    sessionId: string;
-    userId: string;
-    accessToken: string;
-    refreshToken?: string;
-    exp: number;
-}
-
 export class AuthClient {
     private readonly config: SsoConfig;
 
@@ -31,115 +23,53 @@ export class AuthClient {
         this.config = config;
     }
 
-    parseCookie(cookie: string | undefined, allowExpired = true, machine = false): AuthSession {
+    async signIn(res: Response) {
         try {
-            const {accessToken, refreshToken} = JSON.parse(cookie || '');
+            const result = await axios.post(
+                `${this.config.authEndpoint}/signin`,
+                {
+                    login: this.config.sharedLogin,
+                    password: this.config.sharedPassword,
+                },
+                {headers: {Origin: this.config.biOrigin}, timeout: 5000, maxRedirects: 0},
+            );
+            const cookie = setCookieParser
+                .parse(result.headers['set-cookie'] || [])
+                .find((item) => item.name === this.config.cookieName);
+            const {accessToken, refreshToken} = JSON.parse(cookie?.value || '');
             const access = jwt.verify(accessToken, this.config.authPublicKey, {
                 algorithms: ['PS256'],
-                ignoreExpiration: allowExpired,
             });
             if (
                 typeof access === 'string' ||
-                (!machine && access.type !== 'user') ||
+                access.type !== 'user' ||
+                access.userId !== this.config.sharedUserId ||
                 typeof access.sessionId !== 'string' ||
-                typeof access.userId !== 'string' ||
                 !Number.isFinite(access.exp) ||
-                !Number.isFinite(access.iat)
+                typeof refreshToken !== 'string' ||
+                !refreshToken
             ) {
-                throw new Error('Invalid access claims');
+                throw new Error('Invalid auth response');
             }
-            if (refreshToken !== undefined) {
-                const refresh = jwt.verify(refreshToken, this.config.authPublicKey, {
-                    algorithms: ['PS256'],
-                });
-                if (
-                    typeof refresh === 'string' ||
-                    refresh.sessionId !== access.sessionId ||
-                    refresh.userId !== access.userId ||
-                    typeof refresh.refreshTokenId !== 'string'
-                ) {
-                    throw new Error('Mismatched refresh token');
-                }
-            }
-            return {
-                sessionId: access.sessionId,
-                userId: access.userId,
-                accessToken,
-                refreshToken,
-                exp: access.exp!,
+            // Keep the auth service's lifetime; only normalise the cookie security attributes.
+            const options = {
+                secure: true,
+                sameSite: 'strict' as const,
+                path: '/',
+                ...(cookie?.maxAge !== undefined ? {maxAge: cookie.maxAge * 1000} : {}),
+                ...(cookie?.expires ? {expires: cookie.expires} : {}),
             };
-        } catch {
-            throw new SsoError(401, 'SESSION_INVALID');
-        }
-    }
-
-    async request(
-        action: 'signin' | 'signup' | 'refresh' | 'logout',
-        body?: unknown,
-        session?: AuthSession,
-    ) {
-        try {
-            return await axios.request({
-                url: `${this.config.authEndpoint}/${action}`,
-                method: action === 'logout' ? 'GET' : 'POST',
-                data: body,
-                headers: {
-                    Origin: this.config.biOrigin,
-                    ...(session
-                        ? {
-                              Cookie: `${this.config.cookieName}=${encodeURIComponent(
-                                  JSON.stringify({
-                                      accessToken: session.accessToken,
-                                      refreshToken: session.refreshToken,
-                                  }),
-                              )}`,
-                          }
-                        : {}),
-                },
-                timeout: 5000,
-                maxRedirects: 0,
+            res.cookie(this.config.cookieName, JSON.stringify({accessToken, refreshToken}), {
+                ...options,
+                httpOnly: true,
             });
-        } catch (error) {
-            const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-            throw new SsoError(status && status < 500 ? 401 : 503, 'AUTH_SERVICE_ERROR');
-        }
-    }
-
-    readResponse(headers: string[] | undefined): AuthSession {
-        const cookie = setCookieParser
-            .parse(headers || [])
-            .find((item) => item.name === this.config.cookieName);
-        const session = this.parseCookie(cookie?.value, false);
-        if (!session.refreshToken) {
+            res.cookie(`${this.config.cookieName}_exp`, String(access.exp), {
+                ...options,
+                httpOnly: false,
+            });
+        } catch {
+            // Upstream errors may contain the shared password or tokens; never expose/log them.
             throw new SsoError(503, 'AUTH_SERVICE_ERROR');
         }
-        return session;
-    }
-
-    setCookies(res: Response, session: AuthSession) {
-        const options = {
-            secure: true,
-            sameSite: 'strict' as const,
-            path: '/',
-            maxAge: 10 * 86400 * 1000,
-        };
-        res.cookie(
-            this.config.cookieName,
-            JSON.stringify({
-                accessToken: session.accessToken,
-                refreshToken: session.refreshToken,
-            }),
-            {...options, httpOnly: true},
-        );
-        res.cookie(`${this.config.cookieName}_exp`, String(session.exp), {
-            ...options,
-            httpOnly: false,
-        });
-    }
-
-    clearCookies(res: Response) {
-        const options = {secure: true, sameSite: 'strict' as const, path: '/'};
-        res.clearCookie(this.config.cookieName, {...options, httpOnly: true});
-        res.clearCookie(`${this.config.cookieName}_exp`, options);
     }
 }

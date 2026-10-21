@@ -26,8 +26,6 @@ const sensitiveHeaders = [
     'cookie',
     'set-cookie',
     'password',
-    'ticket',
-    'x-datalens-machine-token',
     CSP_HEADER,
     CSP_REPORT_TO_HEADER,
     US_DYNAMIC_MASTER_TOKEN_HEADER,

@@ -4,28 +4,14 @@ import {defineConfig} from '@playwright/test';
 
 export default defineConfig({
     testDir: '.',
-    outputDir: resolve(
-        __dirname,
-        '../test-results/sso',
-        process.env.SSO_REGISTRY_PHASE || 'handoff',
-    ),
-    testMatch: process.env.SSO_REGISTRY_PHASE ? 'registry.test.ts' : 'handoff.test.ts',
+    outputDir: resolve(__dirname, '../test-results/sso'),
+    testMatch: 'login.test.ts',
     workers: 1,
     timeout: 60_000,
     expect: {timeout: 15_000},
     reporter: [
         ['list'],
-        [
-            'html',
-            {
-                outputFolder: resolve(
-                    __dirname,
-                    '../artifacts/sso',
-                    process.env.SSO_REGISTRY_PHASE || 'handoff',
-                ),
-                open: 'never',
-            },
-        ],
+        ['html', {outputFolder: resolve(__dirname, '../artifacts/sso'), open: 'never'}],
     ],
     use: {ignoreHTTPSErrors: true, storageState: {cookies: [], origins: []}},
     projects: [

@@ -8,8 +8,8 @@ export const logout = () => {
         const {sdk} = getSdk();
         return sdk.auth.auth
             .logout()
-            .then((result) => {
-                window.location.href = result?.sso ? '/sso/signed-out' : AUTH_ROUTE.SIGNIN;
+            .then(() => {
+                window.location.href = AUTH_ROUTE.SIGNIN;
                 return {error: null};
             })
             .catch((error) => {

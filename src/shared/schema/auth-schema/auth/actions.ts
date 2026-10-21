@@ -28,7 +28,7 @@ export const actions = {
             headers,
         }),
     }),
-    logout: createAction<{sso?: boolean}, undefined>({
+    logout: createAction<undefined, undefined>({
         method: 'GET',
         proxyHeaders: [AuthHeader.Cookie],
         proxyResponseHeaders: [SET_COOKIE_HEADER],

@@ -87,13 +87,7 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
         allowLanguages,
         headersMap: req.ctx.config.headersMap,
         isAuthEnabled,
-        sso:
-            sso && settingsId !== 'public' && settingsId !== 'embed'
-                ? {
-                      hostOrigin: sso.config.hostOrigin,
-                      session: Boolean(res.locals.ssoSession),
-                  }
-                : undefined,
+        sso: Boolean(sso && settingsId !== 'public' && settingsId !== 'embed'),
         ymapApiKey: config.chartkitSettings?.yandexMap?.token,
         connectorIcons: res.locals.connectorIcons,
         apiPrefix: config.apiPrefix,

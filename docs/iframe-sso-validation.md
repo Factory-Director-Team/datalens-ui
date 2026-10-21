@@ -1,44 +1,47 @@
-# Iframe SSO implementation validation — 2026-10-21
+# Проверки упрощённого автовхода — 2026-10-21
 
-Status: **implemented, Docker acceptance pending**. Do not treat this report as a production acceptance result. The real host application's code is outside this workspace; its ticket and verification endpoints still need to implement the contract in [iframe-sso.md](./iframe-sso.md).
+Статус: код упрощён, **приёмка в Docker не завершена**. Этот отчёт заменяет результаты предыдущей реализации с реестром сессий.
 
-The agreed test boundary is public BFF HTTP/browser behaviour, using real DataLens auth, United Storage and Redis in Docker with a test host backend. The happy-path browser test was written before implementation, but the environment prevented executing the red/green cycle. No in-process auth/store mocks substitute for that acceptance run.
+Текущий контракт: frontend передаёт bearer в `POST /sso/login`; BFF проверяет разрешение только при входе и выдаёт обычную сессию DataLens. Redis, ticket, перехват refresh/logout и дополнительный токен MCP удалены. Рабочий backend основного приложения находится вне workspace: здесь реализованы контракт и тестовый backend. Подключение описано в [инструкции](./iframe-sso.md).
 
-## Checks completed
+## Выполненные проверки
 
-| Check                                                      | Result                                                                                                      |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| UI server, UI client and tests TypeScript checks           | Passed                                                                                                      |
-| MCP TypeScript check                                       | Passed                                                                                                      |
-| ESLint on changed TypeScript files                         | Passed, no errors                                                                                           |
-| Compose validation: test stand and deployment overlay      | Passed                                                                                                      |
-| Test host/bridge JavaScript syntax and runner shell syntax | Passed                                                                                                      |
-| Playwright discovery                                       | 57 handoff browser cases; 3 registry cases repeated across 5 infrastructure phases                          |
-| UI full Jest suite (`--runInBand --watchman=false`)        | 115 suites passed, 2 failed; 912 tests passed, 5 failed                                                     |
-| Original UI commit comparison                              | The same 5 failures reproduced at `d1da367b3cbd518cfea654166b419ee4029c3820` in an isolated source snapshot |
-| MCP full Vitest suite                                      | 44 files passed, 1 failed; 307 tests passed, 14 failed                                                      |
-| Whitespace checks                                          | Passed                                                                                                      |
+| Проверка                                                        | Результат                                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| TypeScript: сервер UI, frontend UI, тесты                       | Успешно                                                           |
+| TypeScript: MCP                                                 | Успешно                                                           |
+| ESLint изменённых TypeScript-файлов                             | Без ошибок                                                        |
+| Конфигурация Compose: стенд и overlay развёртывания             | Успешно                                                           |
+| Синтаксис тестового backend, браузерной функции и shell-скрипта | Успешно                                                           |
+| Обнаружение Playwright-тестов                                   | 13 сценариев × 3 браузера = 39 проверок; это не выполнение тестов |
+| Полный Jest UI                                                  | 115 наборов успешно, 2 с ошибками; 912 тестов прошли, 5 упали     |
+| Полный Vitest MCP                                               | 44 файла успешно, 1 с ошибками; 307 тестов прошли, 14 упали       |
+| `git diff --check`                                              | Успешно                                                           |
 
-The five baseline UI failures are `Paginator.test.tsx` (3) and `valueFormatter.test.tsx` (2): tests query `data-testid`, while the rendered controls expose `data-qa`. They were not changed as part of SSO. The initial Jest attempt also encountered a forbidden Watchman state-directory operation; disabling that optional watcher allowed the suite to execute.
+Пять ошибок UI находятся в `Paginator.test.tsx` и `valueFormatter.test.tsx`: тесты ищут `data-testid`, а компоненты выводят `data-qa`. Те же пять ошибок ранее воспроизведены в изолированной копии исходного коммита `d1da367b3cbd518cfea654166b419ee4029c3820`, до изменений SSO. Полный набор запускался через установленный Jest с `--runInBand --watchman=false`.
 
-All 14 MCP failures are in `http-app.test.ts`, at HTTP server startup. A minimal independent Node listener confirms `EPERM: operation not permitted 127.0.0.1` in this sandbox. Other MCP suites passed. The installed pnpm wrapper also attempted an unavailable version switch, so checks used the repository's installed executables directly.
+Все 14 ошибок MCP находятся в `http-app.test.ts` при запуске HTTP-сервера. Независимый минимальный Node HTTP listener повторно подтвердил запрет среды: `EPERM: operation not permitted 127.0.0.1`. Изменения MCP, добавлявшие дополнительный машинный токен, полностью отменены.
 
-## Docker acceptance
+## Docker
 
-Attempted: `bash tests/sso/run.sh --project=chromium handoff.test.ts`.
+Выполнена попытка запуска актуального стенда:
 
-Result: Docker API access denied at `unix:///Users/viktor/.docker/run/docker.sock`. Containers and browser tests **did not run**. Compose validation and test discovery do not establish runtime correctness. Rerun `bash tests/sso/run.sh` from an environment that can access Docker.
+```sh
+bash tests/sso/run.sh --project=chromium login.test.ts
+```
 
-The stand includes real auth 0.34.0, two locally built BFF replicas, local US, durable Redis, a test host backend and HTTPS sibling origins. Coverage includes independent sessions, explicit reopen after logout, revocation, host outage, native login/logout/refresh, ticket replay/browser/Origin binding, full iframe editing, machine BFF writes, anonymous Public link/Embed and infrastructure restart/outage/loss. Failed binding persistence is induced using a real Redis memory limit after ticket consumption. Runtime behaviour of all these new cases remains unverified.
+Docker отклонил доступ к API по адресу `unix:///Users/viktor/.docker/run/docker.sock`. Контейнеры и браузерные проверки не запускались. Проверка конфигурации и обнаружение тестов не подтверждают работу входа, cookies или iframe. Полный прогон `bash tests/sso/run.sh` нужно выполнить в среде с доступом к Docker.
 
-The failed-registration case asserts no browser auth cookies and denied access. It does not independently observe the auth service's deletion of the newly created session; the best-effort cleanup call is covered by static review only. Actual expired-token timing, real host integration and actual Safari also remain acceptance work; the HTML refresh test forces the expiry hint, and Docker WebKit does not substitute for Safari.
+Согласованная граница тестирования сохранена: браузер и публичные HTTP-эндпоинты настоящих BFF/auth/US; только внешнее приложение заменено тестовым backend. Первый тест нового потока написан до его реализации, но выполнить цикл red/green не удалось из-за ограничения Docker.
+
+Подготовлены проверки автоматического входа без исходных cookies; CORS и bearer в заголовке; неверного и отозванного токена, отсутствия права; недоступного backend, неверного тела ответа и неожиданного HTTP 202; сохранения обычной сессии после отзыва права и выхода из приложения; native login/refresh/logout; выхода в iframe и независимости браузерных сессий; редактирования дашборда; машинных записей и анонимных Public link/Embed. Проверка HTML refresh принудительно меняет cookie времени истечения и не заменяет ожидание фактического истечения access token.
 
 ## Standards
 
-No remaining findings. Static review corrected the stand's missing auth endpoint and US embedding encryption key. Anonymous Public/Embed layouts keep their original iframe presentation.
+Статическое ревью не выявило нарушений документированных правил и существенных структурных проблем. SSO остаётся отдельным модулем с небольшими точками подключения, в соответствии с ADR-0001. По рекомендации ревью тестовый помощник теперь ожидает загрузку содержимого iframe.
 
 ## Spec
 
-One remaining acceptance coverage gap: independent observation of auth-session cleanup after failed binding persistence. No additional concrete authentication bypass was identified by static review. Successful acceptance remains contingent on the Docker run and the real host contract.
+Статическое ревью не выявило оставшихся расхождений с обновлённой спецификацией. Исправлено принятие любого 2xx: проверка backend теперь принимает строго HTTP 200, для HTTP 202 добавлен тест отказа. Фактическая Docker-приёмка, интеграция рабочего backend и проверка настоящего Safari остаются незавершёнными.
 
-Findings: Standards 0; Spec 1 (cleanup acceptance coverage). Neither axis establishes runtime correctness without the outstanding Docker execution.
+Замечания к коду: Standards — 0; Spec — 0. Результаты статического ревью не заменяют недоступный браузерный прогон.

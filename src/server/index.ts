@@ -8,7 +8,6 @@ import {getAppEndpointsConfig} from '../shared/endpoints';
 import {appEnv} from './app-env';
 import {appAuth} from './components/auth/middlewares/auth';
 import {getOpensourceLayoutConfig} from './components/layout/opensource-layout-config';
-import {ssoBeforeAuth} from './components/sso';
 import {serverFeatureWithBoundedContext} from './middlewares';
 import {getConnectorToQlConnectionTypeMap} from './modes/charts/plugins/ql/utils/connection';
 import initOpensourceApp from './modes/opensource/app';
@@ -32,7 +31,7 @@ if (nodekit.config.isAuthEnabled) {
 nodekit.config.appAllowedLangs = nodekit.config.regionalEnvConfig?.allowLanguages;
 nodekit.config.appDefaultLang = nodekit.config.regionalEnvConfig?.defaultLang;
 
-nodekit.config.appBeforeAuthMiddleware = [serverFeatureWithBoundedContext, ssoBeforeAuth];
+nodekit.config.appBeforeAuthMiddleware = [serverFeatureWithBoundedContext];
 
 const app = initOpensourceApp(nodekit);
 registry.setupApp(app);

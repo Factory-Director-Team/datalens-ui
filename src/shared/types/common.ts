@@ -253,7 +253,7 @@ export type DLGlobalData = {
     releaseVersion?: string;
     docsUrl?: string;
     isAuthEnabled?: boolean;
-    sso?: {hostOrigin: string; session: boolean};
+    sso?: boolean;
     authManageLocalUsersDisabled?: boolean;
     authSignupDisabled?: boolean;
     authCookieName?: string;

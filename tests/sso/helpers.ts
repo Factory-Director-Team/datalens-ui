@@ -6,19 +6,11 @@ export const BI = 'https://bi.sso.test';
 export const PROFILE = `${BI}/gateway/root/auth/getMyUserProfile`;
 
 export async function openDataLens(page: Page) {
-    const previousCookie = (await page.context().cookies(BI)).find(
-        (cookie) => cookie.name === 'auth',
-    )?.value;
     await page.goto(HOST);
-    await page.waitForFunction('Boolean(window.sso)');
-    await page.getByRole('button', {name: 'Открыть DataLens'}).click();
-    await expect
-        .poll(async () =>
-            (await page.context().cookies(BI)).some(
-                (cookie) => cookie.name === 'auth' && cookie.value !== previousCookie,
-            ),
-        )
-        .toBe(true);
+    await expect(page.locator('#status')).toHaveText('OPEN');
+    await expect(page.frameLocator('#datalens').locator('body')).toContainText(
+        /workbook|collection|воркбук|коллекц/i,
+    );
     return page.evaluate<{sid: string; bearer: string}>('window.hostSession');
 }
 
