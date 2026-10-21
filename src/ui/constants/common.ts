@@ -181,6 +181,9 @@ export const DL = {
     get AUTH_ENABLED() {
         return window.DL.isAuthEnabled === true;
     },
+    get SSO() {
+        return window.DL.sso;
+    },
     get AUTH_MANAGE_LOCAL_USERS_DISABLED() {
         return window.DL.authManageLocalUsersDisabled === true;
     },

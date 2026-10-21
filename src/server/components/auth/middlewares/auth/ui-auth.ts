@@ -17,6 +17,7 @@ import {registry} from '../../../../registry';
 import type {DatalensGatewaySchemas} from '../../../../types/gateway';
 import Utils from '../../../../utils';
 import {isGatewayError} from '../../../../utils/gateway';
+import {getSsoService} from '../../../sso';
 import {onAuthLogout, onAuthReload, onAuthSignin} from '../../callbacks';
 import type {AccessTokenPayload} from '../../types/token';
 
@@ -48,45 +49,60 @@ export const uiAuth = async (req: Request, res: Response, next: NextFunction) =>
         });
 
         try {
-            await gatewayApi.auth.auth
-                .refreshTokens({
-                    ctx: req.ctx,
-                    headers: {
-                        [AuthHeader.Cookie]: req.headers.cookie,
-                        [FORWARDED_FOR_HEADER]: requestIp.getClientIp(req) ?? undefined,
-                    },
-                    authArgs: {},
-                    requestId: req.ctx.get('requestId') ?? '',
-                    args: undefined,
-                })
-                .then((result) => {
-                    const {responseHeaders} = result;
-
-                    if (responseHeaders) {
-                        Object.keys(responseHeaders).forEach((header) => {
-                            if (header.toLowerCase() === SET_COOKIE_HEADER.toLowerCase()) {
-                                res.header(header, responseHeaders[header]);
-
-                                const settedCookies = setCookieParser.parse(
-                                    responseHeaders[header],
-                                );
-
-                                settedCookies.forEach((cookie) => {
-                                    if (cookie.name === authCookieName) {
-                                        authCookie = cookie.value;
-                                    } else if (cookie.name === authExpCookieName) {
-                                        authExpCookie = cookie.value;
-                                    }
-                                });
-                            }
-                        });
-                    }
-
-                    req.ctx.log('FINISH_REFRESH_TOKEN', {
-                        newExp: Number(authExpCookie),
-                    });
+            const sso = getSsoService();
+            if (sso) {
+                const session = await sso.refresh(req, res);
+                authCookie = JSON.stringify({
+                    accessToken: session.accessToken,
+                    refreshToken: session.refreshToken,
                 });
+                authExpCookie = String(session.exp);
+            } else {
+                await gatewayApi.auth.auth
+                    .refreshTokens({
+                        ctx: req.ctx,
+                        headers: {
+                            [AuthHeader.Cookie]: req.headers.cookie,
+                            [FORWARDED_FOR_HEADER]: requestIp.getClientIp(req) ?? undefined,
+                        },
+                        authArgs: {},
+                        requestId: req.ctx.get('requestId') ?? '',
+                        args: undefined,
+                    })
+                    .then((result) => {
+                        const {responseHeaders} = result;
+
+                        if (responseHeaders) {
+                            Object.keys(responseHeaders).forEach((header) => {
+                                if (header.toLowerCase() === SET_COOKIE_HEADER.toLowerCase()) {
+                                    res.header(header, responseHeaders[header]);
+
+                                    const settedCookies = setCookieParser.parse(
+                                        responseHeaders[header],
+                                    );
+
+                                    settedCookies.forEach((cookie) => {
+                                        if (cookie.name === authCookieName) {
+                                            authCookie = cookie.value;
+                                        } else if (cookie.name === authExpCookieName) {
+                                            authExpCookie = cookie.value;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                        req.ctx.log('FINISH_REFRESH_TOKEN', {
+                            newExp: Number(authExpCookie),
+                        });
+                    });
+            }
         } catch (err) {
+            const sso = getSsoService();
+            if (sso) {
+                sso.fail(req, res, err);
+                return;
+            }
             req.ctx.logError('REFRESH_TOKEN_ERROR', isGatewayError(err) ? err.error : err);
             if (req.query[RELOADED_URL_QUERY]) {
                 onAuthLogout(req, res);

@@ -1,0 +1,111 @@
+name: datalens-sso-test
+services:
+  postgres:
+    extends: {file: ../docker-compose.base.yml, service: postgres}
+    container_name: datalens-sso-test-postgres
+    volumes: [postgres:/var/lib/postgresql/data]
+  auth:
+    extends: {file: ../docker-compose.base.yml, service: auth}
+    container_name: datalens-sso-test-auth
+    image: ghcr.io/datalens-tech/datalens-auth:0.34.0
+    environment:
+      AUTH_ADMIN_PASSWORD: sso-test-admin-password
+      UI_APP_ENDPOINT: https://bi.sso.test
+      DISABLE_WILDCARD_COOKIE: 'true'
+    depends_on:
+      postgres: {condition: service_healthy}
+  us:
+    extends: {file: ../docker-compose.base.yml, service: us}
+    container_name: datalens-sso-test-us
+    build: {context: ../../../datalens-us}
+    image: datalens-sso-test-us
+    environment:
+      CONTROL_API_CRYPTO_KEY: ZGF0YWxlbnN1bnNlY3VyZWZlcm5ldGNyeXB0b2tleQo=
+    depends_on:
+      postgres: {condition: service_healthy}
+  control-api:
+    extends: {file: ../docker-compose.base.yml, service: control-api}
+    container_name: datalens-sso-test-control-api
+    image: ghcr.io/datalens-tech/datalens-control-api:0.2457.0
+  data-api:
+    extends: {file: ../docker-compose.base.yml, service: data-api}
+    container_name: datalens-sso-test-data-api
+    image: ghcr.io/datalens-tech/datalens-data-api:0.2457.0
+  redis:
+    image: redis:7.4-alpine
+    command: [redis-server, --appendonly, 'yes', --appendfsync, always, --maxmemory-policy, noeviction]
+    volumes: [registry:/data]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 2s
+      retries: 30
+  host-backend:
+    build: {context: ../.., dockerfile: tests/sso/Dockerfile}
+    image: datalens-sso-test-runner
+    command: [node, tests/sso/host-backend.mjs]
+    volumes: [fixtures:/fixtures]
+    depends_on:
+      auth: {condition: service_started}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      retries: 120
+  ui: &ui
+    extends: {file: ../docker-compose.base.yml, service: ui}
+    container_name: datalens-sso-test-ui
+    build: {context: ../..}
+    image: datalens-sso-test-ui
+    environment:
+      AUTH_ENABLED: 'true'
+      AUTH_ENDPOINT: http://auth:8080
+      SSO_ENABLED: 'true'
+      SSO_HOST_ORIGIN: https://app.sso.test
+      SSO_BI_ORIGIN: https://bi.sso.test
+      SSO_TICKET_ISSUER: test-host
+      SSO_TICKET_AUDIENCE: test-datalens
+      SSO_TICKET_PUBLIC_KEY_FILE: /fixtures/ticket-public.pem
+      SSO_VERIFICATION_URL: http://host-backend:8080/bi/verify
+      SSO_SERVICE_TOKEN: test-host-service-token-not-for-production
+      SSO_SHARED_LOGIN: admin
+      SSO_SHARED_PASSWORD: sso-test-admin-password
+      SSO_SHARED_USER_ID_FILE: /fixtures/shared-user-id
+      SSO_REDIS_URL: redis://redis:6379
+      SSO_MACHINE_TOKEN: test-machine-service-token-not-for-production
+      SSO_MACHINE_USER_ID_FILE: /fixtures/shared-user-id
+    volumes: [fixtures:/fixtures:ro]
+    depends_on:
+      host-backend: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      us: {condition: service_started}
+      data-api: {condition: service_started}
+      control-api: {condition: service_started}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://localhost:8080/ping').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 3s
+      retries: 120
+  ui-second:
+    <<: *ui
+    container_name: datalens-sso-test-ui-second
+  proxy:
+    image: nginx:1.28-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - fixtures:/fixtures:ro
+    depends_on:
+      ui: {condition: service_healthy}
+      ui-second: {condition: service_healthy}
+    networks:
+      default:
+        aliases: [app.sso.test, bi.sso.test, untrusted.sso.test]
+  tests:
+    build: {context: ../.., dockerfile: tests/sso/Dockerfile}
+    image: datalens-sso-test-runner
+    volumes: [../artifacts:/opt/app/tests/artifacts]
+    depends_on:
+      proxy: {condition: service_started}
+volumes:
+  postgres:
+  registry:
+  fixtures:
+networks:
+  default:

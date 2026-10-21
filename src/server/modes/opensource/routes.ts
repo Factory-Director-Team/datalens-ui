@@ -7,6 +7,7 @@ import {getAuthArgs} from '../../../shared/schema/gateway-utils';
 import {appEnv, isApiMode, isChartsMode, isDatalensMode, isFullMode} from '../../app-env';
 import {getAuthRoutes} from '../../components/auth/routes';
 import type {ChartsEngine} from '../../components/charts-engine';
+import {getSsoRoutes} from '../../components/sso';
 import {embedController, publicController, publicDashController} from '../../controllers';
 import {ping} from '../../controllers/ping';
 import {workbooksTransferController} from '../../controllers/workbook-transfer';
@@ -28,6 +29,7 @@ export function getRoutes({
     afterAuth: AppMiddleware[];
 }) {
     let routes: Record<string, ExtendedAppRouteDescription> = {
+        ...getSsoRoutes(),
         ping: {
             beforeAuth: [],
             afterAuth: [],

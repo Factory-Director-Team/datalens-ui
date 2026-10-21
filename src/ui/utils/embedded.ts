@@ -12,7 +12,7 @@ export const isEmbeddedMode = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const isEmbeddedPreview = urlParams.get(URL_OPTIONS.EMBEDDED) === '1';
     const isEmbedded = urlParams.get('mode') === EMBEDDED_MODE.EMBEDDED;
-    return isIframe() || isEmbedded || isEmbeddedPreview;
+    return (isIframe() && !DL.SSO) || isEmbedded || isEmbeddedPreview;
 };
 
 export const isTvMode = () => {

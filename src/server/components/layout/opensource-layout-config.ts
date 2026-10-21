@@ -10,6 +10,7 @@ import type {
 import {FALLBACK_LANGUAGES, Language, USER_SETTINGS_KEY} from '../../../shared';
 import type {AppLayoutSettings, GetLayoutConfig} from '../../types/app-layout';
 import {addTranslationsScript} from '../../utils/language';
+import {getSsoService} from '../sso';
 
 import {getChartkitLayoutSettings, getPlatform} from './utils';
 
@@ -44,6 +45,7 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
     }
 
     const isAuthEnabled = req.ctx.config.isAuthEnabled;
+    const sso = getSsoService();
 
     // TODO: check and remove optional props;
     let user: DLUser = {lang} as DLUser;
@@ -85,6 +87,13 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
         allowLanguages,
         headersMap: req.ctx.config.headersMap,
         isAuthEnabled,
+        sso:
+            sso && settingsId !== 'public' && settingsId !== 'embed'
+                ? {
+                      hostOrigin: sso.config.hostOrigin,
+                      session: Boolean(res.locals.ssoSession),
+                  }
+                : undefined,
         ymapApiKey: config.chartkitSettings?.yandexMap?.token,
         connectorIcons: res.locals.connectorIcons,
         apiPrefix: config.apiPrefix,
