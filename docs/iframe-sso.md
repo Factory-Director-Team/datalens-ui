@@ -15,7 +15,7 @@ AUTH_ENABLED=true
 SSO_ENABLED=true
 SSO_HOST_ORIGIN=https://app.example.com
 SSO_BI_ORIGIN=https://bi.example.com
-SSO_VERIFICATION_URL=https://app.example.com/bi/verify
+SSO_VERIFICATION_URL=https://dev-ahmad.factorydirector.pro/api/v1/bi/verify
 SSO_SHARED_LOGIN=existing-account-login
 SSO_SHARED_PASSWORD=existing-account-password
 SSO_SHARED_USER_ID=encoded-datalens-user-id
@@ -40,12 +40,20 @@ Cookies авторизации ограничены хостом DataLens и и�
 docker compose -f docker-compose.yaml -f docker-compose.sso.yaml up -d
 ```
 
-## 2. Добавьте проверку bearer на backend приложения
+В overlay адрес проверки уже задан по умолчанию: `https://dev-ahmad.factorydirector.pro/api/v1/bi/verify`. Для другого окружения переопределите `SSO_VERIFICATION_URL` либо `SSO_VERIFICATION_URL_FILE`; файл должен быть смонтирован внутрь контейнера UI. Адрес проверки не определяет `SSO_HOST_ORIGIN`: там нужен точный origin frontend, который открывает iframe.
+
+### Coolify
+
+Самостоятельный `datalens/docker-compose.coolify.yaml` передаёт параметры SSO в UI и использует тот же адрес проверки по умолчанию. В настройках окружения Coolify задайте `SSO_ENABLED=true`, `SSO_HOST_ORIGIN`, `SSO_BI_ORIGIN`, `SSO_SHARED_LOGIN`, `SSO_SHARED_PASSWORD` и `SSO_SHARED_USER_ID`. `SSO_BI_ORIGIN` должен совпадать с публичным HTTPS origin DataLens (`SERVICE_URL_UI`); `AUTH_ENABLED` должен оставаться `true`. Сохраните секретность пароля общего аккаунта. Для параметров SSO доступны также переменные `_FILE`, если соответствующие файлы смонтированы в UI.
+
+После сохранения настроек пересоздайте сервисы с образом UI, содержащим SSO. Отдельный overlay и `SSO_UI_IMAGE` для Coolify не требуются. Без `SSO_ENABLED=true` обычный вход работает как прежде.
+
+## 2. Проверка bearer на backend приложения
 
 BFF отправляет запрос на фиксированный `SSO_VERIFICATION_URL`:
 
 ```http
-POST /bi/verify
+POST /api/v1/bi/verify
 Authorization: Bearer <токен пользователя приложения>
 Content-Type: application/json
 
@@ -68,7 +76,7 @@ Backend должен проверить bearer своей штатной аут�
 
 Оба поля должны быть логическими значениями. Тайм-аут проверки — две секунды. BFF не следует перенаправлениям. Используйте HTTPS либо закрытую доверенную сервисную сеть, поскольку запрос содержит пользовательский bearer.
 
-Рабочее приложение отсутствует в этом workspace, поэтому этот эндпоинт нужно реализовать в его backend. Пример для тестов находится в `tests/sso/host-backend.mjs`.
+Рабочий backend приложения находится вне этого workspace. Ручка `https://dev-ahmad.factorydirector.pro/api/v1/bi/verify` проверена с действующим bearer: HTTP 200 и оба поля `true`; без bearer и с неверным bearer она возвращает HTTP 401. Пример изолированного backend для тестов находится в `tests/sso/host-backend.mjs`. Пользовательский bearer не сохраняется в конфигурации DataLens.
 
 ## 3. Откройте iframe из frontend
 

@@ -7,8 +7,8 @@ import jwt from 'jsonwebtoken';
 import yaml from 'js-yaml';
 
 const fixtures = '/fixtures';
-const hostOrigin = 'https://app.sso.test';
-const biOrigin = 'https://bi.sso.test';
+const hostOrigin = 'https://app.sso.example.com';
+const biOrigin = 'https://bi.sso.example.com';
 execFileSync(
     'openssl',
     [
@@ -20,9 +20,9 @@ execFileSync(
         '-days',
         '2',
         '-subj',
-        '/CN=*.sso.test',
+        '/CN=*.sso.example.com',
         '-addext',
-        'subjectAltName=DNS:app.sso.test,DNS:bi.sso.test,DNS:untrusted.sso.test',
+        'subjectAltName=DNS:app.sso.example.com,DNS:bi.sso.example.com,DNS:untrusted.sso.example.com',
         '-keyout',
         `${fixtures}/tls.key`,
         '-out',

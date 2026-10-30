@@ -1,8 +1,9 @@
 import type {APIRequestContext, Page} from '@playwright/test';
 import {expect} from '@playwright/test';
 
-export const HOST = 'https://app.sso.test';
-export const BI = 'https://bi.sso.test';
+// Reserved example.com keeps the sibling hosts in the same site in WebKit as well.
+export const HOST = 'https://app.sso.example.com';
+export const BI = 'https://bi.sso.example.com';
 export const PROFILE = `${BI}/gateway/root/auth/getMyUserProfile`;
 
 export async function openDataLens(page: Page) {

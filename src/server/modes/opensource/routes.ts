@@ -173,6 +173,13 @@ function getDataLensRoutes({
             route: 'POST /api/private/deleteLock',
         }),
 
+        // Anonymous Public/Embed text widgets need only these local, stateless renderers.
+        postPublicMarkdown: getConfiguredRoute('schematic-gateway', {
+            ...server,
+            route: 'POST /gateway/:scope(root)/:service(mix)/:action(renderMarkdown|batchRenderMarkdown)',
+            authPolicy: AuthPolicy.disabled,
+        }),
+
         postGateway: getConfiguredRoute('schematic-gateway', {
             ...server,
             route: 'POST /gateway/:scope/:service/:action?',

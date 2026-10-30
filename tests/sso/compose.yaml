@@ -10,7 +10,7 @@ services:
     image: ghcr.io/datalens-tech/datalens-auth:0.34.0
     environment:
       AUTH_ADMIN_PASSWORD: sso-test-admin-password
-      UI_APP_ENDPOINT: https://bi.sso.test
+      UI_APP_ENDPOINT: https://bi.sso.example.com
       DISABLE_WILDCARD_COOKIE: 'true'
     depends_on:
       postgres: {condition: service_healthy}
@@ -51,8 +51,8 @@ services:
       AUTH_ENABLED: 'true'
       AUTH_ENDPOINT: http://auth:8080
       SSO_ENABLED: 'true'
-      SSO_HOST_ORIGIN: https://app.sso.test
-      SSO_BI_ORIGIN: https://bi.sso.test
+      SSO_HOST_ORIGIN: https://app.sso.example.com
+      SSO_BI_ORIGIN: https://bi.sso.example.com
       SSO_VERIFICATION_URL: http://host-backend:8080/bi/verify
       SSO_SHARED_LOGIN: admin
       SSO_SHARED_PASSWORD: sso-test-admin-password
@@ -76,7 +76,7 @@ services:
       ui: {condition: service_healthy}
     networks:
       default:
-        aliases: [app.sso.test, bi.sso.test, untrusted.sso.test]
+        aliases: [app.sso.example.com, bi.sso.example.com, untrusted.sso.example.com]
   tests:
     build: {context: ../.., dockerfile: tests/sso/Dockerfile}
     image: datalens-sso-test-runner

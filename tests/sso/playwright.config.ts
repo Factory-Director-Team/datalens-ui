@@ -13,7 +13,11 @@ export default defineConfig({
         ['list'],
         ['html', {outputFolder: resolve(__dirname, '../artifacts/sso'), open: 'never'}],
     ],
-    use: {ignoreHTTPSErrors: true, storageState: {cookies: [], origins: []}},
+    use: {
+        ignoreHTTPSErrors: true,
+        storageState: {cookies: [], origins: []},
+        viewport: {width: 1920, height: 1080},
+    },
     projects: [
         {name: 'chromium', use: {browserName: 'chromium'}},
         {name: 'firefox', use: {browserName: 'firefox'}},

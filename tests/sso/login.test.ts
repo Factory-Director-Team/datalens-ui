@@ -15,7 +15,7 @@ test('opens the full DataLens iframe automatically without a second login', asyn
         httpOnly: true,
         secure: true,
         sameSite: 'Strict',
-        domain: 'bi.sso.test',
+        domain: 'bi.sso.example.com',
     });
 });
 
@@ -39,7 +39,7 @@ test('accepts only the configured parent origin and the bearer header', async ({
     expect(preflight.headers()['access-control-allow-origin']).toBe(HOST);
     expect(preflight.headers()['access-control-allow-credentials']).toBe('true');
     expect(preflight.headers()['access-control-allow-headers']).toBe('Authorization');
-    for (const origin of ['', 'https://untrusted.sso.test']) {
+    for (const origin of ['', 'https://untrusted.sso.example.com']) {
         const response = await request.post(`${BI}/sso/login`, {
             headers: {Authorization: `Bearer ${bearer}`, ...(origin ? {Origin: origin} : {})},
         });
@@ -206,6 +206,18 @@ test('machine BFF writes and anonymous Public link and Embed work during host ve
     expect(publish.status()).toBe(200);
     const anonymous = await browser.newContext({ignoreHTTPSErrors: true});
     try {
+        const protectedEntry = await anonymous.request.post(`${BI}/gateway/root/us/getEntry`, {
+            headers: {Origin: BI},
+            data: {entryId: dashboard.entryId},
+        });
+        expect(protectedEntry.status()).toBe(401);
+        const markdown = await anonymous.request.post(`${BI}/gateway/root/mix/renderMarkdown`, {
+            headers: {Origin: BI},
+            data: {text: 'SSO public content', lang: 'en'},
+        });
+        expect(markdown.status()).toBe(200);
+        expect(markdown.headers()['set-cookie']).toBeUndefined();
+        expect((await markdown.json()).result).toContain('SSO public content');
         const viewer = await anonymous.newPage();
         await viewer.goto(`${BI}/public/${dashboard.entryId}`);
         await expect(viewer.locator('body')).toContainText('SSO public content');
