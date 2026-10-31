@@ -11,6 +11,7 @@ import {FALLBACK_LANGUAGES, Language, USER_SETTINGS_KEY} from '../../../shared';
 import type {AppLayoutSettings, GetLayoutConfig} from '../../types/app-layout';
 import {addTranslationsScript} from '../../utils/language';
 import {getSsoService} from '../sso';
+import {getBrowserAuthCookieName} from '../sso/cookie-isolation';
 
 import {getChartkitLayoutSettings, getPlatform} from './utils';
 
@@ -95,7 +96,7 @@ export const getOpensourceLayoutConfig: GetLayoutConfig = async (args) => {
         docsUrl: config.docsUrl,
         orderedAuthRoles: config.orderedAuthRoles,
         authSignupDisabled: req.ctx.config.authSignupDisabled,
-        authCookieName: req.ctx.config.authCookieName,
+        authCookieName: getBrowserAuthCookieName(req.ctx.config.authCookieName),
         tenantSettings,
         ...appLayoutSettings.DL,
     };

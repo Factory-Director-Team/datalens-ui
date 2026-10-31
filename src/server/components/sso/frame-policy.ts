@@ -7,7 +7,7 @@ export function framePolicy(res: Response, config: SsoConfig) {
     const policies = existing.replace(/(?:^|;)\s*frame-ancestors\s[^;]*/g, '');
     res.setHeader(
         'Content-Security-Policy',
-        `${policies}; frame-ancestors 'self' ${config.hostOrigin}`,
+        `${policies}; frame-ancestors 'self' ${(config.hostOrigins || [config.hostOrigin]).join(' ')}`,
     );
     res.removeHeader('X-Frame-Options');
 }

@@ -44,10 +44,14 @@ export class SsoService {
     private allowOrigin(req: Request, res: Response) {
         res.setHeader('Cache-Control', 'no-store');
         res.vary('Origin');
-        if (req.get('origin') !== this.config.hostOrigin) {
+        const requestOrigin = req.get('origin');
+        if (
+            !requestOrigin ||
+            !(this.config.hostOrigins || [this.config.hostOrigin]).includes(requestOrigin)
+        ) {
             throw new SsoError(403, 'ORIGIN_INVALID');
         }
-        res.setHeader('Access-Control-Allow-Origin', this.config.hostOrigin);
+        res.setHeader('Access-Control-Allow-Origin', requestOrigin);
         res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
 
