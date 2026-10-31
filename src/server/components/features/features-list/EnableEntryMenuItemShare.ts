@@ -5,6 +5,6 @@ export default createFeatureConfig({
     name: Feature.EnableEntryMenuItemShare,
     state: {
         development: true,
-        production: true,
+        production: false,
     },
 });

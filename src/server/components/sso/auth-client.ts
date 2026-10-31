@@ -3,6 +3,8 @@ import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import setCookieParser from 'set-cookie-parser';
 
+import {UserRole} from '../../../shared/components/auth/constants/role';
+
 import type {SsoConfig} from './config';
 
 export class SsoError extends Error {
@@ -40,11 +42,15 @@ export class AuthClient {
             const access = jwt.verify(accessToken, this.config.authPublicKey, {
                 algorithms: ['PS256'],
             });
+            // Native auth 0.21 issues user tokens without a type claim.
             if (
                 typeof access === 'string' ||
-                access.type !== 'user' ||
+                (access.type !== undefined && access.type !== 'user') ||
                 access.userId !== this.config.sharedUserId ||
                 typeof access.sessionId !== 'string' ||
+                !access.sessionId.trim() ||
+                !Array.isArray(access.roles) ||
+                !access.roles.every((role) => Object.values(UserRole).includes(role)) ||
                 !Number.isFinite(access.exp) ||
                 typeof refreshToken !== 'string' ||
                 !refreshToken

@@ -15,6 +15,7 @@ export interface SharedAppConfig {
     metrika: MetrikaCounter;
 
     usMasterToken?: string;
+    usTenantSettings404Fallback?: boolean;
     usDynamicMasterTokenPrivateKey?: string;
 
     regionalEnvConfig?: {allowLanguages?: string[]; defaultLang?: string; langRegion?: string};

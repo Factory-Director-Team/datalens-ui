@@ -64,6 +64,7 @@ export default {
         limit: '21mb',
     },
     usMasterToken: process.env.US_MASTER_TOKEN || 'fake-us-master-token',
+    usTenantSettings404Fallback: isTrueArg(process.env.US_TENANT_SETTINGS_404_FALLBACK),
     usDynamicMasterTokenPrivateKey: getEnvCert(process.env.US_DYNAMIC_MASTER_TOKEN_PRIVATE_KEY),
 
     // CHARTS MODE
